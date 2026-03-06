@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión – Gestión de Equipos</title>
+    <!-- Bootstrap 5.3.3 via CDN (no requiere instalación) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        .login-header {
+            background: linear-gradient(135deg, #0f3460, #533483);
+            border-radius: 16px 16px 0 0;
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .login-header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #0f3460, #533483);
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .btn-login:hover {
+            background: linear-gradient(135deg, #533483, #0f3460);
+            transform: translateY(-1px);
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="card login-card">
+        <!-- Encabezado -->
+        <div class="login-header">
+            <div class="icon">💻</div>
+            <h4 class="fw-bold mb-1">Gestión de Equipos</h4>
+            <p class="mb-0 opacity-75" style="font-size: 13px;">Plataforma de Préstamos Tecnológicos</p>
+        </div>
+
+        <!-- Cuerpo del formulario -->
+        <div class="card-body p-4">
+            <h5 class="text-center text-muted mb-4">Iniciar Sesión</h5>
+
+            <!-- Mensaje de error -->
+            {% if error %}
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <span class="me-2">⚠️</span>
+                <div>{{ error }}</div>
+            </div>
+            {% endif %}
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <!-- Campo Usuario -->
+                <div class="mb-3">
+                    <label for="id_usuario" class="form-label fw-semibold">
+                        👤 {{ form.usuario.label }}
+                    </label>
+                    {{ form.usuario }}
+                </div>
+
+                <!-- Campo Contraseña -->
+                <div class="mb-4">
+                    <label for="id_password" class="form-label fw-semibold">
+                        🔒 {{ form.password.label }}
+                    </label>
+                    {{ form.password }}
+                </div>
+
+                <!-- Botón -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-login text-white">
+                        Ingresar →
+                    </button>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/password-reset/" class="text-muted" style="font-size: 14px;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+                
+            </form>
+        </div>
+
+        <!-- Pie -->
+        <div class="card-footer text-center text-muted py-3" style="font-size: 12px; border-radius: 0 0 16px 16px;">
+            Sistema de Gestión de Préstamos © 2026
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (necesario para alertas dismissibles) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
