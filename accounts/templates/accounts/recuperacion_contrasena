@@ -1,0 +1,41 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Recuperar Contraseña{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">🔐 Recuperar Contraseña</h2>
+                    
+                    {% if mensaje %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ mensaje }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.correo.id_for_label }}" class="form-label">{{ form.correo.label }}</label>
+                            {{ form.correo }}
+                            {% if form.correo.errors %}
+                                <div class="text-danger small mt-1">{{ form.correo.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 btn-lg">Enviar Enlace</button>
+                    </form>
+
+                    <hr>
+                    <p class="text-center">
+                        <a href="{% url 'login' %}">Volver al Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

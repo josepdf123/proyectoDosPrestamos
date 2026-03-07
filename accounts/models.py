@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.utils import timezone
+from datetime import timedelta
 
 
 class Rol(models.Model):
@@ -50,17 +52,25 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     correo = models.EmailField(unique=True, verbose_name='Correo')
     usuario = models.CharField(max_length=100, unique=True, verbose_name='Usuario')
 
-    # Campos para control de bloqueo por intentos fallidos
+    # Campos para control de bloqueo por intentos fallidos - HU13
     intentos_fallidos = models.IntegerField(default=0)
     bloqueado_hasta = models.DateTimeField(null=True, blank=True)
+
+    # Campos para recuperación de contraseña - HU13
+    token_recuperacion = models.CharField(max_length=255, blank=True, null=True)
+    token_recuperacion_expira = models.DateTimeField(null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    # Auditoria - HU14
+    creado_en = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    actualizado_en = models.DateTimeField(auto_now=True, null=True, blank=True)
+
     objects = UsuarioManager()
 
     USERNAME_FIELD = 'usuario'
-    EMAIL_FIELD = 'correo'          # ← línea agregada
+    EMAIL_FIELD = 'correo'
     REQUIRED_FIELDS = ['correo', 'nombre', 'apellido']
 
     def __str__(self):
@@ -69,3 +79,33 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
+
+    def incrementar_intentos_fallidos(self):
+        """HU13: Incrementa intentos fallidos y bloquea si es necesario"""
+        self.intentos_fallidos += 1
+        if self.intentos_fallidos >= 3:
+            self.bloqueado_hasta = timezone.now() + timedelta(minutes=2)
+            self.intentos_fallidos = 0
+        self.save()
+
+    def resetear_intentos(self):
+        """HU13: Resetea intentos después de login exitoso"""
+        self.intentos_fallidos = 0
+        self.bloqueado_hasta = None
+        self.save()
+
+    def esta_bloqueado(self):
+        """HU13: Verifica si la cuenta está bloqueada"""
+        if self.bloqueado_hasta and timezone.now() < self.bloqueado_hasta:
+            return True
+        elif self.bloqueado_hasta and timezone.now() >= self.bloqueado_hasta:
+            self.bloqueado_hasta = None
+            self.save()
+            return False
+        return False
+
+    def obtener_rol_display(self):
+        """HU14: Obtiene nombre legible del rol"""
+        if self.idRol:
+            return self.idRol.get_descripcion_display()
+        return 'Sin Rol'
