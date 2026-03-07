@@ -9,6 +9,9 @@ from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 import uuid
 
+from .models import Usuario, Rol, Equipo, CategoriaEquipo
+
+
 from .forms import LoginForm, RecuperacionContraseñaForm, RestablecerContraseñaForm, UsuarioCreationForm, UsuarioEditForm
 from .models import Usuario, Rol
 
@@ -328,3 +331,44 @@ def usuario_eliminar_view(request, pk):
 
 # Importar Q para búsquedas
 from django.db.models import Q
+
+
+# ─── UH6: VISUALIZACIÓN DE EQUIPOS DISPONIBLES ───────────────────────────────
+
+@login_required(login_url='/login/')
+def equipos_disponibles_view(request):
+    """UH6 CA1 y CA3: Ver equipos disponibles y buscar por nombre"""
+    equipos = Equipo.objects.filter(estado='disponible').order_by('nombre')
+
+    # CA3: Búsqueda por nombre
+    busqueda = request.GET.get('busqueda', '').strip()
+    if busqueda:
+        equipos = equipos.filter(
+            Q(nombre__icontains=busqueda) |
+            Q(marca__icontains=busqueda) |
+            Q(modelo__icontains=busqueda) |
+            Q(categoria__nombre__icontains=busqueda)
+        )
+
+    # Filtro por categoría
+    categoria_filtro = request.GET.get('categoria', '')
+    if categoria_filtro:
+        equipos = equipos.filter(categoria__id=categoria_filtro)
+
+    categorias = CategoriaEquipo.objects.all()
+
+    context = {
+        'equipos': equipos,
+        'categorias': categorias,
+        'busqueda': busqueda,
+        'categoria_filtro': categoria_filtro,
+        'total_disponibles': Equipo.objects.filter(estado='disponible').count(),
+    }
+    return render(request, 'accounts/equipos_disponibles.html', context)
+
+
+@login_required(login_url='/login/')
+def equipo_detalle_view(request, pk):
+    """UH6 CA2: Ver detalle de un equipo específico"""
+    equipo = get_object_or_404(Equipo, pk=pk, estado='disponible')
+    return render(request, 'accounts/equipo_detalle.html', {'equipo': equipo})

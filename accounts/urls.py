@@ -16,4 +16,9 @@ urlpatterns = [
     path('usuarios/crear/', views.usuario_crear_view, name='usuario_crear'),
     path('usuarios/editar/<int:pk>/', views.usuario_editar_view, name='usuario_editar'),
     path('usuarios/eliminar/<int:pk>/', views.usuario_eliminar_view, name='usuario_eliminar'),
+    
+        # UH6 - Visualización de equipos disponibles
+    path('equipos/', views.equipos_disponibles_view, name='equipos_disponibles'),
+    path('equipos/<int:pk>/', views.equipo_detalle_view, name='equipo_detalle'),
+
 ]

@@ -85,10 +85,17 @@
                         </a>
                     </div>
 
+                    <!-- UH6: Equipos disponibles (visible para todos los roles) -->
+                    <div class="sidebar-item">
+                        <a href="{% url 'equipos_disponibles' %}" class="sidebar-link {% if request.resolver_match.url_name == 'equipos_disponibles' or request.resolver_match.url_name == 'equipo_detalle' %}active{% endif %}">
+                            🖥️ Equipos Disponibles
+                        </a>
+                    </div>
+
                     <!-- MENÚ ADMINISTRADOR -->
                     {% if request.user.idRol.descripcion == 'administrador' %}
                         <div class="menu-title">Administración</div>
-                        
+
                         <div class="sidebar-item">
                             <a href="{% url 'usuarios_lista' %}" class="sidebar-link {% if request.resolver_match.url_name == 'usuarios_lista' or request.resolver_match.url_name == 'usuario_crear' or request.resolver_match.url_name == 'usuario_editar' or request.resolver_match.url_name == 'usuario_eliminar' %}active{% endif %}">
                                 👥 Gestionar Usuarios

@@ -109,3 +109,57 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         if self.idRol:
             return self.idRol.get_descripcion_display()
         return 'Sin Rol'
+
+
+# ─── UH6: INVENTARIO DE EQUIPOS ──────────────────────────────────────────────
+
+class CategoriaEquipo(models.Model):
+    nombre = models.CharField(max_length=100, verbose_name='Categoría')
+    descripcion = models.TextField(blank=True, null=True, verbose_name='Descripción')
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        verbose_name = 'Categoría'
+        verbose_name_plural = 'Categorías'
+
+
+class Equipo(models.Model):
+    ESTADO_CHOICES = [
+        ('disponible', 'Disponible'),
+        ('prestado', 'Prestado'),
+        ('mantenimiento', 'En Mantenimiento'),
+        ('dañado', 'Dañado'),
+        ('dado_de_baja', 'Dado de Baja'),
+    ]
+
+    nombre = models.CharField(max_length=150, verbose_name='Nombre')
+    categoria = models.ForeignKey(
+        CategoriaEquipo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Categoría'
+    )
+    descripcion = models.TextField(blank=True, null=True, verbose_name='Descripción')
+    marca = models.CharField(max_length=100, blank=True, null=True, verbose_name='Marca')
+    modelo = models.CharField(max_length=100, blank=True, null=True, verbose_name='Modelo')
+    numero_serie = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name='Número de Serie')
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='disponible',
+        verbose_name='Estado'
+    )
+    imagen = models.ImageField(upload_to='equipos/', blank=True, null=True, verbose_name='Imagen')
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.nombre} ({self.get_estado_display()})'
+
+    class Meta:
+        verbose_name = 'Equipo'
+        verbose_name_plural = 'Equipos'
+        ordering = ['nombre']
