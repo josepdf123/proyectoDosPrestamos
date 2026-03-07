@@ -7,18 +7,22 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('recuperacion-contrasena/', views.recuperacion_contrasena_view, name='recuperacion_contrasena'),
     path('restablecer-contrasena/<str:token>/', views.restablecer_contrasena_view, name='restablecer_contrasena'),
-    
+
     # Dashboard
     path('dashboard/', views.dashboard_view, name='dashboard'),
-    
+
     # HU14 - Gestión de Usuarios (Solo Administrador)
     path('usuarios/', views.usuarios_lista_view, name='usuarios_lista'),
     path('usuarios/crear/', views.usuario_crear_view, name='usuario_crear'),
     path('usuarios/editar/<int:pk>/', views.usuario_editar_view, name='usuario_editar'),
     path('usuarios/eliminar/<int:pk>/', views.usuario_eliminar_view, name='usuario_eliminar'),
-    
-        # UH6 - Visualización de equipos disponibles
+
+    # UH6 - Visualización de equipos disponibles
     path('equipos/', views.equipos_disponibles_view, name='equipos_disponibles'),
     path('equipos/<int:pk>/', views.equipo_detalle_view, name='equipo_detalle'),
 
+    # HU7 - Préstamos
+    path('equipos/<int:pk>/solicitar/', views.solicitar_prestamo_view, name='solicitar_prestamo'),
+    path('mis-prestamos/', views.mis_prestamos_view, name='mis_prestamos'),
+    path('mis-prestamos/<int:pk>/cancelar/', views.cancelar_prestamo_view, name='cancelar_prestamo'),
 ]

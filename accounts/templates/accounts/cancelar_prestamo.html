@@ -1,0 +1,32 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Cancelar Préstamo{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div style="font-size: 60px;">⚠️</div>
+                    <h4 class="fw-bold mt-3">¿Cancelar solicitud?</h4>
+                    <p class="text-muted">
+                        Estás a punto de cancelar el préstamo de:<br>
+                        <strong>{{ prestamo.equipo.nombre }}</strong><br>
+                        <small>Fecha de reclamo: {{ prestamo.fecha_reclamo|date:"d/m/Y" }}</small>
+                    </p>
+
+                    <!-- CA5: Confirmación -->
+                    <form method="POST" class="d-flex gap-2 justify-content-center mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg px-4">
+                            ✅ Sí, cancelar
+                        </button>
+                        <a href="{% url 'mis_prestamos' %}" class="btn btn-outline-secondary btn-lg px-4">
+                            No, volver
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -70,18 +70,23 @@
                     <!-- MENÚ PARA USUARIO SOLICITANTE -->
                     {% if rol == 'Usuario Solicitante (Docente/Estudiante)' %}
                         <div class="menu-title">Mis Préstamos</div>
+                        <!-- ✅ HU7 CA4: Ver mis préstamos -->
                         <div class="sidebar-item">
-                            <a href="#" class="sidebar-link">📋 Mis Préstamos Activos</a>
+                            <a href="{% url 'mis_prestamos' %}" class="sidebar-link">
+                                📋 Mis Préstamos Activos
+                            </a>
                         </div>
                         <div class="sidebar-item">
                             <a href="#" class="sidebar-link">📚 Historial de Préstamos</a>
                         </div>
 
                         <div class="menu-title">Solicitudes</div>
+                        <!-- ✅ HU7: Solicitar préstamo → equipos disponibles -->
                         <div class="sidebar-item">
-                            <a href="#" class="sidebar-link">➕ Solicitar Préstamo</a>
+                            <a href="{% url 'equipos_disponibles' %}" class="sidebar-link">
+                                ➕ Solicitar Préstamo
+                            </a>
                         </div>
-                        <!-- ✅ CAMBIO 1: Sidebar Disponibilidad → equipos_disponibles -->
                         <div class="sidebar-item">
                             <a href="{% url 'equipos_disponibles' %}" class="sidebar-link">
                                 📦 Disponibilidad
@@ -206,21 +211,22 @@
                     <div style="margin-top: 40px;">
                         <h3>🚀 Acciones Rápidas</h3>
                         <div class="row">
+                            <!-- ✅ HU7: Solicitar préstamo → equipos disponibles -->
                             <div class="col-md-6">
-                                <button class="btn btn-primary btn-action w-100">
+                                <a href="{% url 'equipos_disponibles' %}" class="btn btn-primary btn-action w-100">
                                     ➕ Solicitar Préstamo
-                                </button>
+                                </a>
                             </div>
-                            <!-- ✅ CAMBIO 2: Botón Ver Disponibilidad → equipos_disponibles -->
                             <div class="col-md-6">
                                 <a href="{% url 'equipos_disponibles' %}" class="btn btn-info btn-action w-100">
                                     🖥️ Ver Equipos Disponibles
                                 </a>
                             </div>
+                            <!-- ✅ HU7 CA4: Ver mis préstamos -->
                             <div class="col-md-6">
-                                <button class="btn btn-success btn-action w-100">
+                                <a href="{% url 'mis_prestamos' %}" class="btn btn-success btn-action w-100">
                                     📋 Mis Préstamos Activos
-                                </button>
+                                </a>
                             </div>
                             <div class="col-md-6">
                                 <button class="btn btn-warning btn-action w-100">
@@ -260,24 +266,16 @@
                         <h3>🚀 Acciones Rápidas</h3>
                         <div class="row">
                             <div class="col-md-6">
-                                <button class="btn btn-primary btn-action w-100">
-                                    ➕ Agregar Equipo
-                                </button>
+                                <button class="btn btn-primary btn-action w-100">➕ Agregar Equipo</button>
                             </div>
                             <div class="col-md-6">
-                                <button class="btn btn-info btn-action w-100">
-                                    📦 Ver Inventario
-                                </button>
+                                <button class="btn btn-info btn-action w-100">📦 Ver Inventario</button>
                             </div>
                             <div class="col-md-6">
-                                <button class="btn btn-success btn-action w-100">
-                                    ✅ Aprobar Préstamo
-                                </button>
+                                <button class="btn btn-success btn-action w-100">✅ Aprobar Préstamo</button>
                             </div>
                             <div class="col-md-6">
-                                <button class="btn btn-warning btn-action w-100">
-                                    🎫 Crear Ticket
-                                </button>
+                                <button class="btn btn-warning btn-action w-100">🎫 Crear Ticket</button>
                             </div>
                         </div>
                     </div>
@@ -327,9 +325,7 @@
                                 </a>
                             </div>
                             <div class="col-md-6">
-                                <button class="btn btn-warning btn-action w-100">
-                                    📈 Ver Reportes
-                                </button>
+                                <button class="btn btn-warning btn-action w-100">📈 Ver Reportes</button>
                             </div>
                         </div>
                     </div>

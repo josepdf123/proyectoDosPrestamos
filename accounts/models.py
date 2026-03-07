@@ -163,3 +163,49 @@ class Equipo(models.Model):
         verbose_name = 'Equipo'
         verbose_name_plural = 'Equipos'
         ordering = ['nombre']
+
+
+# ─── HU7: PRÉSTAMOS ──────────────────────────────────────────────────────────
+
+class Prestamo(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+        ('entregado', 'Entregado'),
+        ('devuelto', 'Devuelto'),
+        ('cancelado', 'Cancelado'),
+    ]
+
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='prestamos',
+        verbose_name='Usuario'
+    )
+    equipo = models.ForeignKey(
+        Equipo,
+        on_delete=models.CASCADE,
+        related_name='prestamos',
+        verbose_name='Equipo'
+    )
+    fecha_reclamo = models.DateField(verbose_name='Fecha de Reclamo')
+    fecha_entrega = models.DateField(verbose_name='Fecha de Entrega')
+    motivo = models.TextField(verbose_name='Motivo del Préstamo')
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='pendiente',
+        verbose_name='Estado'
+    )
+    observaciones = models.TextField(blank=True, null=True, verbose_name='Observaciones')
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Préstamo de {self.equipo.nombre} por {self.usuario.nombre} ({self.get_estado_display()})'
+
+    class Meta:
+        verbose_name = 'Préstamo'
+        verbose_name_plural = 'Préstamos'
+        ordering = ['-creado_en']

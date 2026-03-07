@@ -372,3 +372,75 @@ def equipo_detalle_view(request, pk):
     """UH6 CA2: Ver detalle de un equipo específico"""
     equipo = get_object_or_404(Equipo, pk=pk, estado='disponible')
     return render(request, 'accounts/equipo_detalle.html', {'equipo': equipo})
+
+
+# ─── HU7: PRÉSTAMOS ──────────────────────────────────────────────────────────
+
+from .models import Prestamo
+from .forms import PrestamoForm
+
+@login_required(login_url='/login/')
+def solicitar_prestamo_view(request, pk):
+    """HU7 CA1 y CA2: Validar disponibilidad y mostrar formulario"""
+    equipo = get_object_or_404(Equipo, pk=pk)
+
+    # CA1: Validar que el equipo está disponible
+    if equipo.estado != 'disponible':
+        messages.error(request, f'❌ El equipo "{equipo.nombre}" no está disponible para préstamo.')
+        return redirect('equipos_disponibles')
+
+    form = PrestamoForm()
+
+    if request.method == 'POST':
+        form = PrestamoForm(request.POST)
+        if form.is_valid():
+            # CA3: Crear la solicitud
+            Prestamo.objects.create(
+                usuario=request.user,
+                equipo=equipo,
+                fecha_reclamo=form.cleaned_data['fecha_reclamo'],
+                fecha_entrega=form.cleaned_data['fecha_entrega'],
+                motivo=form.cleaned_data['motivo'],
+                estado='pendiente'
+            )
+            messages.success(request, f'✅ Solicitud de préstamo para "{equipo.nombre}" enviada correctamente. Espera la aprobación.')
+            return redirect('mis_prestamos')
+
+    return render(request, 'accounts/solicitar_prestamo.html', {
+        'equipo': equipo,
+        'form': form,
+    })
+
+
+@login_required(login_url='/login/')
+def mis_prestamos_view(request):
+    """HU7 CA4: Ver todas las solicitudes del usuario"""
+    prestamos = Prestamo.objects.filter(usuario=request.user).order_by('-creado_en')
+
+    context = {
+        'prestamos': prestamos,
+        'total_pendientes': prestamos.filter(estado='pendiente').count(),
+        'total_aprobados': prestamos.filter(estado='aprobado').count(),
+        'total_activos': prestamos.filter(estado__in=['pendiente', 'aprobado']).count(),
+    }
+    return render(request, 'accounts/mis_prestamos.html', context)
+
+
+@login_required(login_url='/login/')
+def cancelar_prestamo_view(request, pk):
+    """HU7 CA5: Cancelar solicitud de préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=pk, usuario=request.user)
+
+    # Solo se pueden cancelar préstamos pendientes
+    if prestamo.estado not in ['pendiente']:
+        messages.error(request, '❌ Solo puedes cancelar solicitudes en estado pendiente.')
+        return redirect('mis_prestamos')
+
+    if request.method == 'POST':
+        prestamo.estado = 'cancelado'
+        prestamo.save()
+        messages.success(request, f'✅ Solicitud de préstamo para "{prestamo.equipo.nombre}" cancelada.')
+        return redirect('mis_prestamos')
+
+    return render(request, 'accounts/cancelar_prestamo.html', {'prestamo': prestamo})
+
