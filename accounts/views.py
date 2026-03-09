@@ -882,3 +882,57 @@ def inventario_detalle_view(request, pk):
         'total_tickets': tickets.count(),
     }
     return render(request, 'accounts/inventario_detalle.html', context)
+
+
+# ─── HU17: HISTORIAL DE PRÉSTAMOS (ADMINISTRADOR) ────────────────────────────
+
+@solo_administrador
+def historial_prestamos_view(request):
+    """HU17 CA1: Ver historial completo de préstamos"""
+    prestamos = Prestamo.objects.all().order_by('-creado_en')
+
+    # Filtro por estado
+    estado_filtro = request.GET.get('estado', '')
+    if estado_filtro:
+        prestamos = prestamos.filter(estado=estado_filtro)
+
+    # Filtro por equipo
+    equipo_filtro = request.GET.get('equipo', '')
+    if equipo_filtro:
+        prestamos = prestamos.filter(equipo__id=equipo_filtro)
+
+    # Búsqueda por usuario
+    busqueda = request.GET.get('busqueda', '').strip()
+    if busqueda:
+        prestamos = prestamos.filter(
+            Q(usuario__nombre__icontains=busqueda) |
+            Q(usuario__apellido__icontains=busqueda) |
+            Q(equipo__nombre__icontains=busqueda)
+        )
+
+    equipos = Equipo.objects.all().order_by('nombre')
+
+    context = {
+        'prestamos': prestamos,
+        'equipos': equipos,
+        'estados': Prestamo.ESTADO_CHOICES,
+        'estado_filtro': estado_filtro,
+        'equipo_filtro': equipo_filtro,
+        'busqueda': busqueda,
+        'total_prestamos': Prestamo.objects.count(),
+        'total_pendientes': Prestamo.objects.filter(estado='pendiente').count(),
+        'total_aprobados': Prestamo.objects.filter(estado='aprobado').count(),
+        'total_devueltos': Prestamo.objects.filter(estado='devuelto').count(),
+    }
+    return render(request, 'accounts/historial_prestamos.html', context)
+
+
+@solo_administrador
+def historial_prestamo_detalle_view(request, pk):
+    """HU17 CA2: Ver detalle de un préstamo específico"""
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+
+    context = {
+        'prestamo': prestamo,
+    }
+    return render(request, 'accounts/historial_prestamo_detalle.html', context)

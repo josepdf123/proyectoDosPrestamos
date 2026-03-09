@@ -1,0 +1,142 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Historial de Préstamos{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">📚 Historial de Préstamos</h3>
+            <p class="text-muted mb-0">Registro completo de todos los préstamos del sistema</p>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div style="font-size:36px;">📋</div>
+                <div class="fw-bold fs-4">{{ total_prestamos }}</div>
+                <div class="text-muted small">Total Préstamos</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div style="font-size:36px;">⏳</div>
+                <div class="fw-bold fs-4 text-warning">{{ total_pendientes }}</div>
+                <div class="text-muted small">Pendientes</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div style="font-size:36px;">✅</div>
+                <div class="fw-bold fs-4 text-success">{{ total_aprobados }}</div>
+                <div class="text-muted small">Aprobados</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div style="font-size:36px;">🔄</div>
+                <div class="fw-bold fs-4 text-secondary">{{ total_devueltos }}</div>
+                <div class="text-muted small">Devueltos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <input type="text" name="busqueda" value="{{ busqueda }}"
+                           class="form-control" placeholder="🔍 Buscar usuario o equipo...">
+                </div>
+                <div class="col-md-3">
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        {% for valor, etiqueta in estados %}
+                            <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="equipo" class="form-select">
+                        <option value="">Todos los equipos</option>
+                        {% for eq in equipos %}
+                            <option value="{{ eq.id }}" {% if equipo_filtro == eq.id|stringformat:"s" %}selected{% endif %}>
+                                {{ eq.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Usuario</th>
+                        <th>Equipo</th>
+                        <th>Fecha Reclamo</th>
+                        <th>Fecha Entrega</th>
+                        <th>Estado</th>
+                        <th>Registrado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestamo in prestamos %}
+                    <tr>
+                        <td>{{ prestamo.pk }}</td>
+                        <td>
+                            <strong>{{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellido }}</strong><br>
+                            <small class="text-muted">{{ prestamo.usuario.correo }}</small>
+                        </td>
+                        <td>{{ prestamo.equipo.nombre }}</td>
+                        <td>{{ prestamo.fecha_reclamo|date:"d/m/Y" }}</td>
+                        <td>{{ prestamo.fecha_entrega|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if prestamo.estado == 'pendiente' %}
+                                <span class="badge bg-warning text-dark">⏳ Pendiente</span>
+                            {% elif prestamo.estado == 'aprobado' %}
+                                <span class="badge bg-success">✅ Aprobado</span>
+                            {% elif prestamo.estado == 'rechazado' %}
+                                <span class="badge bg-danger">❌ Rechazado</span>
+                            {% elif prestamo.estado == 'entregado' %}
+                                <span class="badge bg-info">📦 Entregado</span>
+                            {% elif prestamo.estado == 'devuelto' %}
+                                <span class="badge bg-secondary">🔄 Devuelto</span>
+                            {% elif prestamo.estado == 'cancelado' %}
+                                <span class="badge bg-dark">🚫 Cancelado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ prestamo.creado_en|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'historial_prestamo_detalle' prestamo.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                🔍 Ver detalle
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">No hay préstamos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

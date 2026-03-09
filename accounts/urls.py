@@ -51,5 +51,11 @@ urlpatterns = [
     # HU16 - Inventario General (Administrador)
     path('inventario/', views.inventario_general_view, name='inventario_general'),
     path('inventario/<int:pk>/', views.inventario_detalle_view, name='inventario_detalle'),
+    
+    # HU17 - Historial de Préstamos (Administrador)
+    path('historial-prestamos/', views.historial_prestamos_view, name='historial_prestamos'),
+    path('historial-prestamos/<int:pk>/', views.historial_prestamo_detalle_view, name='historial_prestamo_detalle'),
+
+
 
 ]

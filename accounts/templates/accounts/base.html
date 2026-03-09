@@ -111,6 +111,12 @@
                                 📦 Inventario General
                             </a>
                         </div>
+                        <!-- ✅ HU17: Historial de Préstamos -->
+                        <div class="sidebar-item">
+                            <a href="{% url 'historial_prestamos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'historial_prestamos' or request.resolver_match.url_name == 'historial_prestamo_detalle' %}active{% endif %}">
+                                📚 Historial Préstamos
+                            </a>
+                        </div>
                     {% endif %}
 
                     <!-- MENÚ SALIDA -->
