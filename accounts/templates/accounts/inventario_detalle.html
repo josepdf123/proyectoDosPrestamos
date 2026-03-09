@@ -1,0 +1,188 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Detalle Equipo - {{ equipo.nombre }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <a href="{% url 'inventario_general' %}" class="btn btn-outline-secondary mb-4">
+        ← Volver al Inventario
+    </a>
+
+    <div class="row">
+        <!-- Imagen y datos principales -->
+        <div class="col-md-4 mb-4">
+            {% if equipo.imagen %}
+                <img src="{{ equipo.imagen.url }}" class="img-fluid rounded shadow" alt="{{ equipo.nombre }}">
+            {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow"
+                     style="height: 250px; font-size: 80px;">💻</div>
+            {% endif %}
+
+            <!-- Estado actual -->
+            <div class="card border-0 shadow-sm mt-3 p-3 text-center">
+                <div class="text-muted small mb-1">Estado actual</div>
+                {% if equipo.estado == 'disponible' %}
+                    <span class="badge bg-success fs-6 px-3 py-2">✅ Disponible</span>
+                {% elif equipo.estado == 'prestado' %}
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">📋 Prestado</span>
+                {% elif equipo.estado == 'mantenimiento' %}
+                    <span class="badge bg-danger fs-6 px-3 py-2">🔧 Mantenimiento</span>
+                {% elif equipo.estado == 'dañado' %}
+                    <span class="badge bg-secondary fs-6 px-3 py-2">⚠️ Dañado</span>
+                {% elif equipo.estado == 'dado_de_baja' %}
+                    <span class="badge bg-dark fs-6 px-3 py-2">🚫 Baja</span>
+                {% endif %}
+            </div>
+
+            <!-- Responsable actual -->
+            {% if responsable %}
+            <div class="card border-0 shadow-sm mt-3 p-3">
+                <div class="text-muted small mb-1 fw-bold">👤 Responsable actual</div>
+                <div class="fw-bold">{{ responsable.usuario.nombre }} {{ responsable.usuario.apellido }}</div>
+                <div class="text-muted small">{{ responsable.usuario.correo }}</div>
+                <div class="text-muted small mt-1">
+                    Entrega: {{ responsable.fecha_entrega|date:"d/m/Y" }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Detalle del equipo -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3">{{ equipo.nombre }}</h4>
+                    <table class="table table-borderless">
+                        <tbody>
+                            {% if equipo.categoria %}
+                            <tr>
+                                <td class="text-muted fw-semibold" style="width:160px;">📂 Categoría</td>
+                                <td>{{ equipo.categoria.nombre }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.marca %}
+                            <tr>
+                                <td class="text-muted fw-semibold">🏷️ Marca</td>
+                                <td>{{ equipo.marca }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.modelo %}
+                            <tr>
+                                <td class="text-muted fw-semibold">📋 Modelo</td>
+                                <td>{{ equipo.modelo }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.numero_serie %}
+                            <tr>
+                                <td class="text-muted fw-semibold">🔢 N° Serie</td>
+                                <td><code>{{ equipo.numero_serie }}</code></td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.descripcion %}
+                            <tr>
+                                <td class="text-muted fw-semibold">📝 Descripción</td>
+                                <td>{{ equipo.descripcion }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="text-muted fw-semibold">📅 Registrado</td>
+                                <td>{{ equipo.creado_en|date:"d/m/Y" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Historial de préstamos -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white fw-bold">
+                    📋 Historial de Préstamos ({{ total_prestamos }})
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Fecha Reclamo</th>
+                                <th>Fecha Entrega</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prestamo in historial_prestamos %}
+                            <tr>
+                                <td>{{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellido }}</td>
+                                <td>{{ prestamo.fecha_reclamo|date:"d/m/Y" }}</td>
+                                <td>{{ prestamo.fecha_entrega|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if prestamo.estado == 'pendiente' %}
+                                        <span class="badge bg-warning text-dark">⏳ Pendiente</span>
+                                    {% elif prestamo.estado == 'aprobado' %}
+                                        <span class="badge bg-success">✅ Aprobado</span>
+                                    {% elif prestamo.estado == 'rechazado' %}
+                                        <span class="badge bg-danger">❌ Rechazado</span>
+                                    {% elif prestamo.estado == 'entregado' %}
+                                        <span class="badge bg-info">📦 Entregado</span>
+                                    {% elif prestamo.estado == 'devuelto' %}
+                                        <span class="badge bg-secondary">🔄 Devuelto</span>
+                                    {% elif prestamo.estado == 'cancelado' %}
+                                        <span class="badge bg-dark">🚫 Cancelado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Sin historial de préstamos.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tickets de mantenimiento -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold">
+                    🔧 Tickets de Mantenimiento ({{ total_tickets }})
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>#</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in tickets %}
+                            <tr>
+                                <td>{{ ticket.pk }}</td>
+                                <td>{{ ticket.get_tipo_display }}</td>
+                                <td>{{ ticket.descripcion|truncatechars:50 }}</td>
+                                <td>
+                                    {% if ticket.estado == 'no_atendido' %}
+                                        <span class="badge bg-danger">🔴 No Atendido</span>
+                                    {% elif ticket.estado == 'en_proceso' %}
+                                        <span class="badge bg-warning text-dark">🟡 En Proceso</span>
+                                    {% elif ticket.estado == 'finalizado' %}
+                                        <span class="badge bg-success">🟢 Finalizado</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ticket.fecha_creacion|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Sin tickets registrados.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

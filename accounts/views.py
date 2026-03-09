@@ -806,3 +806,79 @@ def ticket_editar_view(request, pk):
     }
 
     return render(request, 'accounts/ticket_editar.html', context)
+
+
+# ─── HU16: INVENTARIO GENERAL (ADMINISTRADOR) ────────────────────────────────
+
+@solo_administrador
+def inventario_general_view(request):
+    """HU16 CA1: Ver inventario completo de equipos e ítems"""
+    equipos = Equipo.objects.all().order_by('nombre')
+    items = Item.objects.all().order_by('nombre')
+
+    # Filtro por estado equipos
+    estado_filtro = request.GET.get('estado', '')
+    if estado_filtro:
+        equipos = equipos.filter(estado=estado_filtro)
+
+    # Filtro por categoría
+    categoria_filtro = request.GET.get('categoria', '')
+    if categoria_filtro:
+        equipos = equipos.filter(categoria__id=categoria_filtro)
+
+    # Búsqueda
+    busqueda = request.GET.get('busqueda', '').strip()
+    if busqueda:
+        equipos = equipos.filter(
+            Q(nombre__icontains=busqueda) |
+            Q(marca__icontains=busqueda) |
+            Q(modelo__icontains=busqueda) |
+            Q(numero_serie__icontains=busqueda)
+        )
+        items = items.filter(
+            Q(nombre__icontains=busqueda) |
+            Q(descripcion__icontains=busqueda)
+        )
+
+    categorias = CategoriaEquipo.objects.all()
+
+    context = {
+        'equipos': equipos,
+        'items': items,
+        'categorias': categorias,
+        'estados': Equipo.ESTADO_CHOICES,
+        'estado_filtro': estado_filtro,
+        'categoria_filtro': categoria_filtro,
+        'busqueda': busqueda,
+        # Estadísticas
+        'total_equipos': Equipo.objects.count(),
+        'total_disponibles': Equipo.objects.filter(estado='disponible').count(),
+        'total_prestados': Equipo.objects.filter(estado='prestado').count(),
+        'total_mantenimiento': Equipo.objects.filter(estado='mantenimiento').count(),
+        'total_items': Item.objects.count(),
+    }
+    return render(request, 'accounts/inventario_general.html', context)
+
+
+@solo_administrador
+def inventario_detalle_view(request, pk):
+    """HU16 CA2: Ver detalle de un equipo con historial y estado"""
+    equipo = get_object_or_404(Equipo, pk=pk)
+    historial_prestamos = Prestamo.objects.filter(equipo=equipo).order_by('-creado_en')
+    tickets = Ticket.objects.filter(equipo=equipo).order_by('-fecha_creacion')
+
+    # Responsable actual (préstamo aprobado o entregado activo)
+    responsable = Prestamo.objects.filter(
+        equipo=equipo,
+        estado__in=['aprobado', 'entregado']
+    ).first()
+
+    context = {
+        'equipo': equipo,
+        'historial_prestamos': historial_prestamos,
+        'tickets': tickets,
+        'responsable': responsable,
+        'total_prestamos': historial_prestamos.count(),
+        'total_tickets': tickets.count(),
+    }
+    return render(request, 'accounts/inventario_detalle.html', context)

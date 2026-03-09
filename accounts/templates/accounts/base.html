@@ -87,6 +87,14 @@
                                 👥 Gestionar Usuarios
                             </a>
                         </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'inventario_general' %}" class="sidebar-link {% if request.resolver_match.url_name == 'inventario_general' or request.resolver_match.url_name == 'inventario_detalle' %}active{% endif %}">
+                                📦 Inventario General
+                            </a>
+                        </div>
+
+
+                    
                     {% endif %}
 
                     <!-- MENÚ SALIDA -->

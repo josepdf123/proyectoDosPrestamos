@@ -47,4 +47,9 @@ urlpatterns = [
     path('tickets/', views.tickets_lista_view, name='tickets_lista'),
     path('tickets/crear/', views.ticket_crear_view, name='ticket_crear'),
     path('tickets/editar/<int:pk>/', views.ticket_editar_view, name='ticket_editar'),
+    
+    # HU16 - Inventario General (Administrador)
+    path('inventario/', views.inventario_general_view, name='inventario_general'),
+    path('inventario/<int:pk>/', views.inventario_detalle_view, name='inventario_detalle'),
+
 ]
