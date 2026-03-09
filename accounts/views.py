@@ -1,4 +1,4 @@
-from .models import Usuario, Rol, Equipo, CategoriaEquipo, Item, CategoriaItem, Ticket, Prestamo
+from .models import Usuario, Rol, Equipo, CategoriaEquipo, Item, CategoriaItem, Ticket, Prestamo, Notificacion
 from .forms import LoginForm, RecuperacionContraseñaForm, RestablecerContraseñaForm, UsuarioCreationForm, UsuarioEditForm, ItemForm, EquipoForm, TicketForm, TicketEditForm, PrestamoForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
@@ -11,6 +11,9 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from datetime import timedelta, date
 import uuid
+
+#from .models import Usuario, Rol, Equipo, CategoriaEquipo, Item, CategoriaItem, Ticket, Prestamo, Notificacion
+
 
 
 MAX_INTENTOS = 3
@@ -494,6 +497,14 @@ def aprobar_prestamo_view(request, pk):
         equipo = prestamo.equipo
         equipo.estado = 'prestado'
         equipo.save()
+        
+        # HU3: Notificar al usuario
+        Notificacion.objects.create(
+            usuario=prestamo.usuario,
+            tipo='prestamo_aprobado',
+            mensaje=f'Tu préstamo del equipo "{prestamo.equipo.nombre}" fue aprobado. ¡Ya puedes recogerlo!',
+            prestamo=prestamo
+        )
         messages.success(request, f'✅ Préstamo de "{equipo.nombre}" aprobado correctamente.')
         return redirect('gestion_prestamos')
 
@@ -513,6 +524,15 @@ def denegar_prestamo_view(request, pk):
         prestamo.estado = 'rechazado'
         prestamo.observaciones = request.POST.get('observaciones', '')
         prestamo.save()
+        
+        # HU3: Notificar al usuario
+        Notificacion.objects.create(
+            usuario=prestamo.usuario,
+            tipo='prestamo_rechazado',
+            mensaje=f'Tu préstamo del equipo "{prestamo.equipo.nombre}" fue rechazado. Motivo: {prestamo.observaciones or "Sin observaciones"}.',
+            prestamo=prestamo
+        )
+
         messages.success(request, f'✅ Solicitud de "{prestamo.equipo.nombre}" denegada.')
         return redirect('gestion_prestamos')
 
@@ -899,3 +919,85 @@ def historial_prestamo_detalle_view(request, pk):
     """HU17 CA2: Ver detalle de un préstamo específico"""
     prestamo = get_object_or_404(Prestamo, pk=pk)
     return render(request, 'accounts/historial_prestamo_detalle.html', {'prestamo': prestamo})
+
+
+# ─── HU3: NOTIFICACIONES ─────────────────────────────────────────────────────
+
+def generar_notificaciones_prestamos(usuario):
+    """
+    Genera automáticamente notificaciones para préstamos atrasados
+    o que vencen hoy. Evita duplicados del mismo día.
+    """
+    from datetime import date
+    hoy = date.today()
+
+    prestamos_activos = Prestamo.objects.filter(
+        usuario=usuario,
+        estado__in=['aprobado', 'entregado']
+    )
+
+    for prestamo in prestamos_activos:
+        dias = (prestamo.fecha_entrega - hoy).days
+
+        if dias < 0:
+            tipo = 'prestamo_atrasado'
+            mensaje = (
+                f'Tu préstamo del equipo "{prestamo.equipo.nombre}" '
+                f'está atrasado {abs(dias)} día(s). Por favor, devuélvelo.'
+            )
+        elif dias == 0:
+            tipo = 'prestamo_vence_hoy'
+            mensaje = (
+                f'Tu préstamo del equipo "{prestamo.equipo.nombre}" '
+                f'vence HOY. Recuerda devolverlo.'
+            )
+        else:
+            continue  # sin notificación si aún tiene tiempo
+
+        # Evitar duplicar notificaciones del mismo tipo y préstamo en el mismo día
+        ya_existe = Notificacion.objects.filter(
+            usuario=usuario,
+            tipo=tipo,
+            prestamo=prestamo,
+            creado_en__date=hoy
+        ).exists()
+
+        if not ya_existe:
+            Notificacion.objects.create(
+                usuario=usuario,
+                tipo=tipo,
+                mensaje=mensaje,
+                prestamo=prestamo
+            )
+
+
+@login_required(login_url='/login/')
+def notificaciones_view(request):
+    """HU3 CA1 y CA2: Ver todas las notificaciones del usuario"""
+    # Generar notificaciones automáticas antes de mostrar
+    generar_notificaciones_prestamos(request.user)
+
+    notificaciones = Notificacion.objects.filter(
+        usuario=request.user
+    ).order_by('-creado_en')[:30]
+
+    # Marcar todas como leídas al abrir la página
+    Notificacion.objects.filter(
+        usuario=request.user,
+        leida=False
+    ).update(leida=True)
+
+    context = {
+        'notificaciones': notificaciones,
+        'total': notificaciones.count(),
+    }
+    return render(request, 'accounts/notificaciones.html', context)
+
+
+@login_required(login_url='/login/')
+def marcar_notificacion_leida_view(request, pk):
+    """HU3: Marcar una notificación individual como leída"""
+    notificacion = get_object_or_404(Notificacion, pk=pk, usuario=request.user)
+    notificacion.leida = True
+    notificacion.save()
+    return redirect('notificaciones')

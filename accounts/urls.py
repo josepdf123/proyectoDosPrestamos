@@ -58,6 +58,11 @@ urlpatterns = [
     
     # HU2 - Cambio de equipo
     path('solicitar-cambio-equipo/<int:pk>/', views.solicitar_cambio_equipo_view, name='solicitar_cambio_equipo'),
+    
+    # HU3 - Notificaciones
+    path('notificaciones/', views.notificaciones_view, name='notificaciones'),
+    path('notificaciones/<int:pk>/leida/', views.marcar_notificacion_leida_view, name='marcar_notificacion_leida'),
+
 
 
 
