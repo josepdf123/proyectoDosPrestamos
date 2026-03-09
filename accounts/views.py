@@ -1,6 +1,5 @@
 from .models import Usuario, Rol, Equipo, CategoriaEquipo, Item, CategoriaItem, Ticket, Prestamo
 from .forms import LoginForm, RecuperacionContraseñaForm, RestablecerContraseñaForm, UsuarioCreationForm, UsuarioEditForm, ItemForm, EquipoForm, TicketForm, TicketEditForm, PrestamoForm
-from .models import Usuario, Rol
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -9,14 +8,17 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from datetime import timedelta
+from django.db.models import Q
+from datetime import timedelta, date
 import uuid
+
 
 MAX_INTENTOS = 3
 TIEMPO_BLOQUEO_MINUTOS = 2
 
 
 # ─── DECORADOR PARA SOLO ADMINISTRADOR ───────────────────────────────────────
+
 
 def solo_administrador(view_func):
     """Decorador para restringir acceso solo a administradores - HU14"""
@@ -29,7 +31,9 @@ def solo_administrador(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
-# ─── HU12: DECORADOR PARA SOLO ENCARGADO DE TECNOLOGÍA ─────────────────────────────
+
+# ─── DECORADOR PARA SOLO ENCARGADO DE TECNOLOGÍA ─────────────────────────────
+
 
 def solo_encargado(view_func):
     """Decorador para restringir acceso solo a encargados - HU12"""
@@ -45,9 +49,9 @@ def solo_encargado(view_func):
 
 # ─── HU13: LOGIN Y RECUPERACIÓN DE CONTRASEÑA ────────────────────────────────
 
+
 def login_view(request):
     """HU13: Login del Administrador con validaciones mejoradas"""
-    # Si ya está autenticado, redirigir al dashboard
     if request.user.is_authenticated:
         return redirect('dashboard')
 
@@ -60,19 +64,16 @@ def login_view(request):
             usuario_str = form.cleaned_data['usuario']
             password = form.cleaned_data['password']
 
-            # Validar entrada
             if not usuario_str or not password:
                 error = 'Usuario y contraseña son requeridos.'
                 return render(request, 'accounts/login.html', {'form': form, 'error': error})
 
-            # Buscar el usuario en la base de datos
             try:
                 usuario_obj = Usuario.objects.get(usuario=usuario_str)
             except Usuario.DoesNotExist:
                 error = 'Usuario o contraseña incorrectos.'
                 return render(request, 'accounts/login.html', {'form': form, 'error': error})
 
-            # Verificar si la cuenta está bloqueada temporalmente - HU13
             if usuario_obj.esta_bloqueado():
                 segundos_restantes = int((usuario_obj.bloqueado_hasta - timezone.now()).total_seconds())
                 minutos = segundos_restantes // 60
@@ -80,19 +81,15 @@ def login_view(request):
                 error = f'🔒 Cuenta bloqueada. Intenta de nuevo en {minutos}m {segundos}s.'
                 return render(request, 'accounts/login.html', {'form': form, 'error': error})
 
-            # Intentar autenticar
             user = authenticate(request, username=usuario_str, password=password)
 
             if user is not None:
-                # Login exitoso: resetear contadores - HU13
                 usuario_obj.resetear_intentos()
                 login(request, user)
                 messages.success(request, f'¡Bienvenido, {usuario_obj.nombre}!')
                 return redirect('dashboard')
             else:
-                # Contraseña incorrecta: incrementar contador - HU13
                 usuario_obj.incrementar_intentos_fallidos()
-
                 if usuario_obj.bloqueado_hasta:
                     error = (
                         f'🔒 Has alcanzado {MAX_INTENTOS} intentos fallidos. '
@@ -114,20 +111,14 @@ def recuperacion_contrasena_view(request):
         form = RecuperacionContraseñaForm(request.POST)
         if form.is_valid():
             correo = form.cleaned_data['correo']
-
             try:
                 usuario = Usuario.objects.get(correo=correo)
-
-                # Generar token único
                 token = str(uuid.uuid4())
                 usuario.token_recuperacion = token
                 usuario.token_recuperacion_expira = timezone.now() + timedelta(hours=24)
                 usuario.save()
 
-                # Construir URL para restablecer contraseña
                 enlace = request.build_absolute_uri(f'/restablecer-contrasena/{token}/')
-
-                # Enviar email
                 asunto = '🔐 Recuperación de Contraseña - Gestión de Préstamos'
                 mensaje_email = f'''
 Hola {usuario.nombre},
@@ -144,20 +135,11 @@ Si no solicitaste esto, ignora este correo.
 Saludos,
 Sistema de Gestión de Préstamos
                 '''
-
-                send_mail(
-                    asunto,
-                    mensaje_email,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo],
-                    fail_silently=False,
-                )
-
+                send_mail(asunto, mensaje_email, settings.DEFAULT_FROM_EMAIL, [correo], fail_silently=False)
                 mensaje = f'✅ Hemos enviado un enlace de recuperación a {correo}. Revisa tu bandeja de entrada.'
                 return render(request, 'accounts/recuperacion_contrasena.html', {'form': form, 'mensaje': mensaje})
 
             except Usuario.DoesNotExist:
-                # No revelar si el email existe o no (seguridad)
                 mensaje = 'Si existe una cuenta con ese correo, recibirás un enlace de recuperación.'
 
     return render(request, 'accounts/recuperacion_contrasena.html', {'form': form, 'mensaje': mensaje})
@@ -170,12 +152,9 @@ def restablecer_contrasena_view(request, token):
 
     try:
         usuario = Usuario.objects.get(token_recuperacion=token)
-
-        # Verificar si el token ha expirado
         if not usuario.token_recuperacion_expira or timezone.now() > usuario.token_recuperacion_expira:
             error = '❌ El enlace ha expirado. Por favor, solicita uno nuevo.'
             return render(request, 'accounts/restablecer_contrasena.html', {'error': error, 'token': token})
-
     except Usuario.DoesNotExist:
         error = '❌ El enlace no es válido.'
         return render(request, 'accounts/restablecer_contrasena.html', {'error': error, 'token': token})
@@ -184,33 +163,21 @@ def restablecer_contrasena_view(request, token):
         form = RestablecerContraseñaForm(request.POST)
         if form.is_valid():
             password = form.cleaned_data['password']
-
-            # Validar longitud mínima
             if len(password) < 8:
                 error = '❌ La contraseña debe tener al menos 8 caracteres.'
-                return render(request, 'accounts/restablecer_contrasena.html', {
-                    'form': form,
-                    'error': error,
-                    'token': token
-                })
+                return render(request, 'accounts/restablecer_contrasena.html', {'form': form, 'error': error, 'token': token})
 
-            # Actualizar contraseña
             usuario.set_password(password)
             usuario.token_recuperacion = None
             usuario.token_recuperacion_expira = None
             usuario.resetear_intentos()
             usuario.save()
-
             messages.success(request, '✅ Contraseña restablecida. Ya puedes iniciar sesión.')
             return redirect('login')
         else:
             error = 'Por favor, revisa los datos ingresados.'
 
-    return render(request, 'accounts/restablecer_contrasena.html', {
-        'form': form,
-        'error': error,
-        'token': token
-    })
+    return render(request, 'accounts/restablecer_contrasena.html', {'form': form, 'error': error, 'token': token})
 
 
 def dashboard_view(request):
@@ -235,14 +202,14 @@ def logout_view(request):
     return redirect('login')
 
 
-# ─── HU14: GESTIÓN DE USUARIOS ──────────────────────────────────────────────
+# ─── HU14: GESTIÓN DE USUARIOS ───────────────────────────────────────────────
+
 
 @solo_administrador
 def usuarios_lista_view(request):
     """HU14: Listar todos los usuarios"""
     usuarios = Usuario.objects.all().order_by('-creado_en')
 
-    # Búsqueda
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         usuarios = usuarios.filter(
@@ -252,7 +219,6 @@ def usuarios_lista_view(request):
             Q(correo__icontains=busqueda)
         )
 
-    # Filtro por rol
     rol_filtro = request.GET.get('rol', '')
     if rol_filtro:
         usuarios = usuarios.filter(idRol__descripcion=rol_filtro)
@@ -266,7 +232,6 @@ def usuarios_lista_view(request):
         'rol_filtro': rol_filtro,
         'total_usuarios': Usuario.objects.count(),
     }
-
     return render(request, 'accounts/usuarios_lista.html', context)
 
 
@@ -306,12 +271,7 @@ def usuario_editar_view(request, pk):
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
 
-    context = {
-        'form': form,
-        'usuario': usuario,
-        'modo': 'editar'
-    }
-
+    context = {'form': form, 'usuario': usuario, 'modo': 'editar'}
     return render(request, 'accounts/usuario_editar.html', context)
 
 
@@ -320,7 +280,6 @@ def usuario_eliminar_view(request, pk):
     """HU14: Eliminar usuario"""
     usuario = get_object_or_404(Usuario, pk=pk)
 
-    # No permitir eliminar la propia cuenta
     if usuario.pk == request.user.pk:
         messages.error(request, '❌ No puedes eliminar tu propia cuenta.')
         return redirect('usuarios_lista')
@@ -331,26 +290,18 @@ def usuario_eliminar_view(request, pk):
         messages.success(request, f'✅ Usuario {nombre_completo} eliminado correctamente.')
         return redirect('usuarios_lista')
 
-    context = {
-        'usuario': usuario,
-        'modo': 'eliminar'
-    }
-
+    context = {'usuario': usuario, 'modo': 'eliminar'}
     return render(request, 'accounts/usuario_eliminar.html', context)
 
 
-# Importar Q para búsquedas
-from django.db.models import Q
-
-
 # ─── UH6: VISUALIZACIÓN DE EQUIPOS DISPONIBLES ───────────────────────────────
+
 
 @login_required(login_url='/login/')
 def equipos_disponibles_view(request):
     """UH6 CA1 y CA3: Ver equipos disponibles y buscar por nombre"""
     equipos = Equipo.objects.filter(estado='disponible').order_by('nombre')
 
-    # CA3: Búsqueda por nombre
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         equipos = equipos.filter(
@@ -360,7 +311,6 @@ def equipos_disponibles_view(request):
             Q(categoria__nombre__icontains=busqueda)
         )
 
-    # Filtro por categoría
     categoria_filtro = request.GET.get('categoria', '')
     if categoria_filtro:
         equipos = equipos.filter(categoria__id=categoria_filtro)
@@ -386,15 +336,12 @@ def equipo_detalle_view(request, pk):
 
 # ─── HU7: PRÉSTAMOS ──────────────────────────────────────────────────────────
 
-from .models import Prestamo
-from .forms import PrestamoForm
 
 @login_required(login_url='/login/')
 def solicitar_prestamo_view(request, pk):
     """HU7 CA1 y CA2: Validar disponibilidad y mostrar formulario"""
     equipo = get_object_or_404(Equipo, pk=pk)
 
-    # CA1: Validar que el equipo está disponible
     if equipo.estado != 'disponible':
         messages.error(request, f'❌ El equipo "{equipo.nombre}" no está disponible para préstamo.')
         return redirect('equipos_disponibles')
@@ -404,7 +351,6 @@ def solicitar_prestamo_view(request, pk):
     if request.method == 'POST':
         form = PrestamoForm(request.POST)
         if form.is_valid():
-            # CA3: Crear la solicitud
             Prestamo.objects.create(
                 usuario=request.user,
                 equipo=equipo,
@@ -416,22 +362,45 @@ def solicitar_prestamo_view(request, pk):
             messages.success(request, f'✅ Solicitud de préstamo para "{equipo.nombre}" enviada correctamente. Espera la aprobación.')
             return redirect('mis_prestamos')
 
-    return render(request, 'accounts/solicitar_prestamo.html', {
-        'equipo': equipo,
-        'form': form,
-    })
+    return render(request, 'accounts/solicitar_prestamo.html', {'equipo': equipo, 'form': form})
+
+
+# ─── HU2: MIS PRÉSTAMOS ACTIVOS ──────────────────────────────────────────────
 
 
 @login_required(login_url='/login/')
 def mis_prestamos_view(request):
-    """HU7 CA4: Ver todas las solicitudes del usuario"""
-    prestamos = Prestamo.objects.filter(usuario=request.user).order_by('-creado_en')
+    """HU2: Ver préstamos con colores por urgencia y días faltantes"""
+    hoy = date.today()
+    prestamos_qs = Prestamo.objects.filter(usuario=request.user).order_by('fecha_entrega')
+
+    prestamos = []
+    for p in prestamos_qs:
+        dias_restantes = (p.fecha_entrega - hoy).days if p.fecha_entrega else None
+
+        # CA1: lógica de color
+        if p.estado in ['devuelto', 'cancelado', 'rechazado']:
+            color = 'secondary'
+        elif dias_restantes is None:
+            color = 'secondary'
+        elif dias_restantes < 0:
+            color = 'danger'     # rojo: atrasado
+        elif dias_restantes <= 2:
+            color = 'warning'    # amarillo: menos de 2 días
+        else:
+            color = 'success'    # verde: con tiempo
+
+        prestamos.append({
+            'obj': p,
+            'dias_restantes': dias_restantes,
+            'color': color,
+        })
 
     context = {
         'prestamos': prestamos,
-        'total_pendientes': prestamos.filter(estado='pendiente').count(),
-        'total_aprobados': prestamos.filter(estado='aprobado').count(),
-        'total_activos': prestamos.filter(estado__in=['pendiente', 'aprobado']).count(),
+        'total_pendientes': prestamos_qs.filter(estado='pendiente').count(),
+        'total_aprobados': prestamos_qs.filter(estado='aprobado').count(),
+        'total_activos': prestamos_qs.filter(estado__in=['pendiente', 'aprobado']).count(),
     }
     return render(request, 'accounts/mis_prestamos.html', context)
 
@@ -441,7 +410,6 @@ def cancelar_prestamo_view(request, pk):
     """HU7 CA5: Cancelar solicitud de préstamo"""
     prestamo = get_object_or_404(Prestamo, pk=pk, usuario=request.user)
 
-    # Solo se pueden cancelar préstamos pendientes
     if prestamo.estado not in ['pendiente']:
         messages.error(request, '❌ Solo puedes cancelar solicitudes en estado pendiente.')
         return redirect('mis_prestamos')
@@ -454,7 +422,47 @@ def cancelar_prestamo_view(request, pk):
 
     return render(request, 'accounts/cancelar_prestamo.html', {'prestamo': prestamo})
 
+
+@login_required(login_url='/login/')
+def solicitar_cambio_equipo_view(request, pk):
+    """HU2 CA4: Solicitar cambio de equipo por fallo"""
+    prestamo = get_object_or_404(Prestamo, pk=pk, usuario=request.user)
+
+    if prestamo.estado not in ['aprobado', 'entregado']:
+        messages.error(request, '❌ Solo puedes solicitar cambio en préstamos aprobados o entregados.')
+        return redirect('mis_prestamos')
+
+    if request.method == 'POST':
+        motivo_cambio = request.POST.get('motivo_cambio', '').strip()
+        if not motivo_cambio:
+            messages.error(request, '❌ Debes ingresar el motivo del cambio.')
+            return render(request, 'accounts/solicitar_cambio_equipo.html', {'prestamo': prestamo})
+
+        prestamo.observaciones = f'[CAMBIO SOLICITADO] {motivo_cambio}'
+        prestamo.save()
+
+        # Notificar al administrador por correo
+        admins = Usuario.objects.filter(idRol__descripcion='administrador')
+        correos_admin = [a.correo for a in admins if a.correo]
+        if correos_admin:
+            send_mail(
+                '🔄 Solicitud de Cambio de Equipo',
+                f'El usuario {request.user.nombre} {request.user.apellido} '
+                f'ha solicitado un cambio del equipo "{prestamo.equipo.nombre}".\n\n'
+                f'Motivo: {motivo_cambio}',
+                settings.DEFAULT_FROM_EMAIL,
+                correos_admin,
+                fail_silently=True,
+            )
+
+        messages.success(request, '✅ Solicitud de cambio enviada. El administrador será notificado.')
+        return redirect('mis_prestamos')
+
+    return render(request, 'accounts/solicitar_cambio_equipo.html', {'prestamo': prestamo})
+
+
 # ─── HU12: GESTIÓN DE PRÉSTAMOS (ENCARGADO) ──────────────────────────────────
+
 
 @solo_encargado
 def gestion_prestamos_view(request):
@@ -483,11 +491,9 @@ def aprobar_prestamo_view(request, pk):
         prestamo.estado = 'aprobado'
         prestamo.observaciones = request.POST.get('observaciones', '')
         prestamo.save()
-
         equipo = prestamo.equipo
         equipo.estado = 'prestado'
         equipo.save()
-
         messages.success(request, f'✅ Préstamo de "{equipo.nombre}" aprobado correctamente.')
         return redirect('gestion_prestamos')
 
@@ -507,19 +513,20 @@ def denegar_prestamo_view(request, pk):
         prestamo.estado = 'rechazado'
         prestamo.observaciones = request.POST.get('observaciones', '')
         prestamo.save()
-
         messages.success(request, f'✅ Solicitud de "{prestamo.equipo.nombre}" denegada.')
         return redirect('gestion_prestamos')
 
     return render(request, 'accounts/denegar_prestamo.html', {'prestamo': prestamo})
-    # ─── HU09: GESTIÓN DE ITEMS DE INVENTARIO ───────────────────────────────────
+
+
+# ─── HU09: GESTIÓN DE ITEMS DE INVENTARIO ────────────────────────────────────
+
 
 @solo_encargado
 def items_lista_view(request):
     """HU09: Listar todos los ítems de inventario"""
     items = Item.objects.all().order_by('nombre')
 
-    # Búsqueda
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         items = items.filter(
@@ -527,7 +534,6 @@ def items_lista_view(request):
             Q(descripcion__icontains=busqueda)
         )
 
-    # Filtro por categoría
     categoria_filtro = request.GET.get('categoria', '')
     if categoria_filtro:
         items = items.filter(categoria__id=categoria_filtro)
@@ -541,7 +547,6 @@ def items_lista_view(request):
         'categoria_filtro': categoria_filtro,
         'total_items': Item.objects.count(),
     }
-
     return render(request, 'accounts/items_lista.html', context)
 
 
@@ -581,12 +586,7 @@ def item_editar_view(request, pk):
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
 
-    context = {
-        'form': form,
-        'item': item,
-        'modo': 'editar'
-    }
-
+    context = {'form': form, 'item': item, 'modo': 'editar'}
     return render(request, 'accounts/item_editar.html', context)
 
 
@@ -601,22 +601,18 @@ def item_eliminar_view(request, pk):
         messages.success(request, f'✅ Ítem "{nombre}" eliminado correctamente.')
         return redirect('items_lista')
 
-    context = {
-        'item': item,
-        'modo': 'eliminar'
-    }
-
+    context = {'item': item, 'modo': 'eliminar'}
     return render(request, 'accounts/item_eliminar.html', context)
 
 
-# ─── HU10: GESTIÓN DE EQUIPOS ───────────────────────────────────────────────
+# ─── HU10: GESTIÓN DE EQUIPOS ────────────────────────────────────────────────
+
 
 @solo_encargado
 def equipos_gestion_lista_view(request):
     """HU10: Listar todos los equipos (para encargado)"""
     equipos = Equipo.objects.all().order_by('nombre')
 
-    # Búsqueda
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         equipos = equipos.filter(
@@ -626,12 +622,10 @@ def equipos_gestion_lista_view(request):
             Q(numero_serie__icontains=busqueda)
         )
 
-    # Filtro por categoría
     categoria_filtro = request.GET.get('categoria', '')
     if categoria_filtro:
         equipos = equipos.filter(categoria__id=categoria_filtro)
 
-    # Filtro por estado
     estado_filtro = request.GET.get('estado', '')
     if estado_filtro:
         equipos = equipos.filter(estado=estado_filtro)
@@ -651,7 +645,6 @@ def equipos_gestion_lista_view(request):
         'total_prestados': Equipo.objects.filter(estado='prestado').count(),
         'total_mantenimiento': Equipo.objects.filter(estado='mantenimiento').count(),
     }
-
     return render(request, 'accounts/equipos_lista.html', context)
 
 
@@ -691,12 +684,7 @@ def equipo_editar_view(request, pk):
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
 
-    context = {
-        'form': form,
-        'equipo': equipo,
-        'modo': 'editar'
-    }
-
+    context = {'form': form, 'equipo': equipo, 'modo': 'editar'}
     return render(request, 'accounts/equipo_editar.html', context)
 
 
@@ -711,32 +699,26 @@ def equipo_eliminar_view(request, pk):
         messages.success(request, f'✅ Equipo "{nombre}" eliminado correctamente.')
         return redirect('equipos_lista')
 
-    context = {
-        'equipo': equipo,
-        'modo': 'eliminar'
-    }
-
+    context = {'equipo': equipo, 'modo': 'eliminar'}
     return render(request, 'accounts/equipo_eliminar.html', context)
 
 
 # ─── HU11: GESTIÓN DE TICKETS DE MANTENIMIENTO ───────────────────────────────
+
 
 @solo_encargado
 def tickets_lista_view(request):
     """HU11: Listar todos los tickets de mantenimiento"""
     tickets = Ticket.objects.all().order_by('-fecha_creacion')
 
-    # Filtro por estado
     estado_filtro = request.GET.get('estado', '')
     if estado_filtro:
         tickets = tickets.filter(estado=estado_filtro)
 
-    # Filtro por tipo
     tipo_filtro = request.GET.get('tipo', '')
     if tipo_filtro:
         tickets = tickets.filter(tipo=tipo_filtro)
 
-    # Búsqueda por equipo
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         tickets = tickets.filter(
@@ -744,13 +726,10 @@ def tickets_lista_view(request):
             Q(descripcion__icontains=busqueda)
         )
 
-    estados = Ticket.ESTADO_CHOICES
-    tipos = Ticket.TIPO_CHOICES
-
     context = {
         'tickets': tickets,
-        'estados': estados,
-        'tipos': tipos,
+        'estados': Ticket.ESTADO_CHOICES,
+        'tipos': Ticket.TIPO_CHOICES,
         'estado_filtro': estado_filtro,
         'tipo_filtro': tipo_filtro,
         'busqueda': busqueda,
@@ -759,7 +738,6 @@ def tickets_lista_view(request):
         'total_en_proceso': Ticket.objects.filter(estado='en_proceso').count(),
         'total_finalizados': Ticket.objects.filter(estado='finalizado').count(),
     }
-
     return render(request, 'accounts/tickets_lista.html', context)
 
 
@@ -799,16 +777,12 @@ def ticket_editar_view(request, pk):
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
 
-    context = {
-        'form': form,
-        'ticket': ticket,
-        'modo': 'editar'
-    }
-
+    context = {'form': form, 'ticket': ticket, 'modo': 'editar'}
     return render(request, 'accounts/ticket_editar.html', context)
 
 
 # ─── HU16: INVENTARIO GENERAL (ADMINISTRADOR) ────────────────────────────────
+
 
 @solo_administrador
 def inventario_general_view(request):
@@ -816,17 +790,14 @@ def inventario_general_view(request):
     equipos = Equipo.objects.all().order_by('nombre')
     items = Item.objects.all().order_by('nombre')
 
-    # Filtro por estado equipos
     estado_filtro = request.GET.get('estado', '')
     if estado_filtro:
         equipos = equipos.filter(estado=estado_filtro)
 
-    # Filtro por categoría
     categoria_filtro = request.GET.get('categoria', '')
     if categoria_filtro:
         equipos = equipos.filter(categoria__id=categoria_filtro)
 
-    # Búsqueda
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         equipos = equipos.filter(
@@ -850,7 +821,6 @@ def inventario_general_view(request):
         'estado_filtro': estado_filtro,
         'categoria_filtro': categoria_filtro,
         'busqueda': busqueda,
-        # Estadísticas
         'total_equipos': Equipo.objects.count(),
         'total_disponibles': Equipo.objects.filter(estado='disponible').count(),
         'total_prestados': Equipo.objects.filter(estado='prestado').count(),
@@ -867,7 +837,6 @@ def inventario_detalle_view(request, pk):
     historial_prestamos = Prestamo.objects.filter(equipo=equipo).order_by('-creado_en')
     tickets = Ticket.objects.filter(equipo=equipo).order_by('-fecha_creacion')
 
-    # Responsable actual (préstamo aprobado o entregado activo)
     responsable = Prestamo.objects.filter(
         equipo=equipo,
         estado__in=['aprobado', 'entregado']
@@ -886,22 +855,20 @@ def inventario_detalle_view(request, pk):
 
 # ─── HU17: HISTORIAL DE PRÉSTAMOS (ADMINISTRADOR) ────────────────────────────
 
+
 @solo_administrador
 def historial_prestamos_view(request):
     """HU17 CA1: Ver historial completo de préstamos"""
     prestamos = Prestamo.objects.all().order_by('-creado_en')
 
-    # Filtro por estado
     estado_filtro = request.GET.get('estado', '')
     if estado_filtro:
         prestamos = prestamos.filter(estado=estado_filtro)
 
-    # Filtro por equipo
     equipo_filtro = request.GET.get('equipo', '')
     if equipo_filtro:
         prestamos = prestamos.filter(equipo__id=equipo_filtro)
 
-    # Búsqueda por usuario
     busqueda = request.GET.get('busqueda', '').strip()
     if busqueda:
         prestamos = prestamos.filter(
@@ -931,8 +898,4 @@ def historial_prestamos_view(request):
 def historial_prestamo_detalle_view(request, pk):
     """HU17 CA2: Ver detalle de un préstamo específico"""
     prestamo = get_object_or_404(Prestamo, pk=pk)
-
-    context = {
-        'prestamo': prestamo,
-    }
-    return render(request, 'accounts/historial_prestamo_detalle.html', context)
+    return render(request, 'accounts/historial_prestamo_detalle.html', {'prestamo': prestamo})
