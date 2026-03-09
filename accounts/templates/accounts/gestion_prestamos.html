@@ -1,0 +1,94 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>📋 Gestión de Préstamos</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+      <h5 class="mb-0">⏳ Solicitudes Pendientes ({{ total_pendientes }})</h5>
+    </div>
+    <div class="card-body">
+      {% if prestamos_pendientes %}
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Equipo</th>
+              <th>Fecha Reclamo</th>
+              <th>Fecha Entrega</th>
+              <th>Motivo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in prestamos_pendientes %}
+            <tr>
+              <td>{{ p.usuario.nombre }} {{ p.usuario.apellido }}</td>
+              <td>{{ p.equipo.nombre }}</td>
+              <td>{{ p.fecha_reclamo }}</td>
+              <td>{{ p.fecha_entrega }}</td>
+              <td>{{ p.motivo|truncatechars:40 }}</td>
+              <td>
+                <a href="{% url 'aprobar_prestamo' p.pk %}" class="btn btn-success btn-sm">✅ Aprobar</a>
+                <a href="{% url 'denegar_prestamo' p.pk %}" class="btn btn-danger btn-sm">❌ Denegar</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted text-center py-3">No hay solicitudes pendientes.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header bg-secondary text-white">
+      <h5 class="mb-0">📁 Préstamos Gestionados Recientemente</h5>
+    </div>
+    <div class="card-body">
+      {% if prestamos_gestionados %}
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Equipo</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in prestamos_gestionados %}
+            <tr>
+              <td>{{ p.usuario.nombre }} {{ p.usuario.apellido }}</td>
+              <td>{{ p.equipo.nombre }}</td>
+              <td>
+                {% if p.estado == 'aprobado' %}
+                  <span class="badge bg-success">Aprobado</span>
+                {% elif p.estado == 'rechazado' %}
+                  <span class="badge bg-danger">Denegado</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ p.get_estado_display }}</span>
+                {% endif %}
+              </td>
+              <td>{{ p.actualizado_en|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted">No hay préstamos gestionados aún.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

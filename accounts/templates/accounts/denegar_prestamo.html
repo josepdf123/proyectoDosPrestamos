@@ -1,0 +1,55 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">❌ Denegar Solicitud de Préstamo</h4>
+        </div>
+        <div class="card-body">
+
+          <table class="table table-borderless">
+            <tr>
+              <td><strong>👤 Usuario:</strong></td>
+              <td>{{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellido }}</td>
+            </tr>
+            <tr>
+              <td><strong>💻 Equipo:</strong></td>
+              <td>{{ prestamo.equipo.nombre }}</td>
+            </tr>
+            <tr>
+              <td><strong>📅 Fecha de Reclamo:</strong></td>
+              <td>{{ prestamo.fecha_reclamo }}</td>
+            </tr>
+            <tr>
+              <td><strong>📅 Fecha de Entrega:</strong></td>
+              <td>{{ prestamo.fecha_entrega }}</td>
+            </tr>
+            <tr>
+              <td><strong>📝 Motivo:</strong></td>
+              <td>{{ prestamo.motivo }}</td>
+            </tr>
+          </table>
+
+          <hr>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label"><strong>Motivo del rechazo (opcional)</strong></label>
+              <textarea name="observaciones" class="form-control" rows="3"
+                        placeholder="Explica por qué se deniega la solicitud..."></textarea>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-danger">❌ Confirmar Denegación</button>
+              <a href="{% url 'gestion_prestamos' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
