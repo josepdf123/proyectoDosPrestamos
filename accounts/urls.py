@@ -62,6 +62,11 @@ urlpatterns = [
     # HU3 - Notificaciones
     path('notificaciones/', views.notificaciones_view, name='notificaciones'),
     path('notificaciones/<int:pk>/leida/', views.marcar_notificacion_leida_view, name='marcar_notificacion_leida'),
+    
+    # HU5 - Historial mis préstamos
+    path('historial-mis-prestamos/', views.historial_mis_prestamos_view, name='historial_mis_prestamos'),
+    path('historial-mis-prestamos/<int:pk>/', views.historial_mis_prestamos_detalle_view, name='historial_mis_prestamos_detalle'),
+
 
 
 

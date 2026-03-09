@@ -143,6 +143,14 @@
                             </a>
                         </div>
 
+                        <!-- ✅ HU5: Historial de préstamos -->
+                        <div class="sidebar-item">
+                            <a href="{% url 'historial_mis_prestamos' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'historial_mis_prestamos' or request.resolver_match.url_name == 'historial_mis_prestamos_detalle' %}active{% endif %}">
+                                📚 Historial de Préstamos
+                            </a>
+                        </div>
+
                         <!-- HU3: Enlace notificaciones en sidebar -->
                         <div class="menu-title">Notificaciones</div>
                         <div class="sidebar-item">

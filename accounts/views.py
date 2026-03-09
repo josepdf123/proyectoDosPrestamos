@@ -1001,3 +1001,35 @@ def marcar_notificacion_leida_view(request, pk):
     notificacion.leida = True
     notificacion.save()
     return redirect('notificaciones')
+
+# ─── HU5: HISTORIAL DE PRÉSTAMOS (USUARIO SOLICITANTE) ───────────────────────
+
+@login_required(login_url='/login/')
+def historial_mis_prestamos_view(request):
+    """HU5 CA1: Ver historial completo de préstamos del usuario solicitante"""
+    prestamos = Prestamo.objects.filter(usuario=request.user).order_by('-creado_en')
+
+    # Filtro por estado
+    estado_filtro = request.GET.get('estado', '')
+    if estado_filtro:
+        prestamos = prestamos.filter(estado=estado_filtro)
+
+    context = {
+        'prestamos': prestamos,
+        'estados': Prestamo.ESTADO_CHOICES,
+        'estado_filtro': estado_filtro,
+        'total': prestamos.count(),
+        'total_pendientes':  Prestamo.objects.filter(usuario=request.user, estado='pendiente').count(),
+        'total_aprobados':   Prestamo.objects.filter(usuario=request.user, estado='aprobado').count(),
+        'total_devueltos':   Prestamo.objects.filter(usuario=request.user, estado='devuelto').count(),
+        'total_rechazados':  Prestamo.objects.filter(usuario=request.user, estado='rechazado').count(),
+    }
+    return render(request, 'accounts/historial_mis_prestamos.html', context)
+
+
+@login_required(login_url='/login/')
+def historial_mis_prestamos_detalle_view(request, pk):
+    """HU5 CA2: Ver detalle de un préstamo específico del usuario"""
+    prestamo = get_object_or_404(Prestamo, pk=pk, usuario=request.user)
+    return render(request, 'accounts/historial_mis_prestamos_detalle.html', {'prestamo': prestamo})
+
