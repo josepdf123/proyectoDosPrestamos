@@ -50,21 +50,13 @@
                             📊 Dashboard
                         </a>
                     </div>
-                    {% if request.user.idRol.descripcion == 'encargado_tecnologia' %}
-                    <div class="sidebar-item">
-                        <a href="{% url 'gestion_prestamos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'gestion_prestamos' %}active{% endif %}">
-                            📋 Gestión de Préstamos
-                        </a>
-                    </div>
-                    {% endif %}
-                    
                     <div class="sidebar-item">
                         <a href="{% url 'equipos_disponibles' %}" class="sidebar-link {% if request.resolver_match.url_name == 'equipos_disponibles' or request.resolver_match.url_name == 'equipo_detalle' %}active{% endif %}">
                             🖥️ Equipos Disponibles
                         </a>
                     </div>
 
-                    <!-- ✅ HU7 CA4: Mis Préstamos (solo usuario_solicitante) -->
+                    <!-- MENÚ USUARIO SOLICITANTE -->
                     {% if request.user.idRol.descripcion == 'usuario_solicitante' %}
                         <div class="menu-title">Mis Préstamos</div>
                         <div class="sidebar-item">
@@ -75,6 +67,33 @@
                         <div class="sidebar-item">
                             <a href="{% url 'equipos_disponibles' %}" class="sidebar-link {% if request.resolver_match.url_name == 'solicitar_prestamo' %}active{% endif %}">
                                 ➕ Solicitar Préstamo
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- MENÚ ENCARGADO DE TECNOLOGÍA -->
+                    {% if request.user.idRol.descripcion == 'encargado_tecnologia' %}
+                        <div class="menu-title">Gestión</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'equipos_lista' %}" class="sidebar-link {% if request.resolver_match.url_name == 'equipos_lista' or request.resolver_match.url_name == 'equipo_crear' or request.resolver_match.url_name == 'equipo_editar' or request.resolver_match.url_name == 'equipo_eliminar' %}active{% endif %}">
+                                ⚙️ Gestión de Equipos
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'items_lista' %}" class="sidebar-link {% if request.resolver_match.url_name == 'items_lista' or request.resolver_match.url_name == 'item_crear' or request.resolver_match.url_name == 'item_editar' or request.resolver_match.url_name == 'item_eliminar' %}active{% endif %}">
+                                🗃️ Gestión de Ítems
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'tickets_lista' %}" class="sidebar-link {% if request.resolver_match.url_name == 'tickets_lista' or request.resolver_match.url_name == 'ticket_crear' or request.resolver_match.url_name == 'ticket_editar' %}active{% endif %}">
+                                🎫 Tickets
+                            </a>
+                        </div>
+
+                        <div class="menu-title">Solicitudes</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'gestion_prestamos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'gestion_prestamos' or request.resolver_match.url_name == 'aprobar_prestamo' or request.resolver_match.url_name == 'denegar_prestamo' %}active{% endif %}">
+                                ✅ Gestionar Préstamos
                             </a>
                         </div>
                     {% endif %}
@@ -92,9 +111,6 @@
                                 📦 Inventario General
                             </a>
                         </div>
-
-
-                    
                     {% endif %}
 
                     <!-- MENÚ SALIDA -->

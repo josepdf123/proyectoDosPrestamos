@@ -1,0 +1,110 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Gestión de Equipos{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">⚙️ Gestión de Equipos</h3>
+            <p class="text-muted mb-0">
+                <span class="badge bg-primary">{{ total_equipos }} total</span>
+                <span class="badge bg-success ms-1">{{ total_disponibles }} disponibles</span>
+                <span class="badge bg-warning text-dark ms-1">{{ total_prestados }} prestados</span>
+                <span class="badge bg-danger ms-1">{{ total_mantenimiento }} mantenimiento</span>
+            </p>
+        </div>
+        <a href="{% url 'equipo_crear' %}" class="btn btn-primary">
+            ➕ Agregar Equipo
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <input type="text" name="busqueda" value="{{ busqueda }}"
+                           class="form-control" placeholder="🔍 Buscar equipo...">
+                </div>
+                <div class="col-md-3">
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        {% for valor, etiqueta in estados %}
+                            <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="categoria" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categorias %}
+                            <option value="{{ cat.id }}" {% if categoria_filtro == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Marca / Modelo</th>
+                        <th>N° Serie</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipo in equipos %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ equipo.nombre }}</strong></td>
+                        <td>{{ equipo.categoria.nombre|default:"—" }}</td>
+                        <td>{{ equipo.marca|default:"—" }} / {{ equipo.modelo|default:"—" }}</td>
+                        <td><code>{{ equipo.numero_serie|default:"—" }}</code></td>
+                        <td>
+                            {% if equipo.estado == 'disponible' %}
+                                <span class="badge bg-success">✅ Disponible</span>
+                            {% elif equipo.estado == 'prestado' %}
+                                <span class="badge bg-warning text-dark">📋 Prestado</span>
+                            {% elif equipo.estado == 'mantenimiento' %}
+                                <span class="badge bg-danger">🔧 Mantenimiento</span>
+                            {% elif equipo.estado == 'dañado' %}
+                                <span class="badge bg-secondary">⚠️ Dañado</span>
+                            {% elif equipo.estado == 'dado_de_baja' %}
+                                <span class="badge bg-dark">🚫 Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'equipo_editar' equipo.pk %}"
+                               class="btn btn-sm btn-outline-primary me-1">✏️ Editar</a>
+                            <a href="{% url 'equipo_eliminar' equipo.pk %}"
+                               class="btn btn-sm btn-outline-danger">🗑️ Eliminar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No hay equipos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
