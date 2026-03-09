@@ -111,7 +111,61 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return 'Sin Rol'
 
 
-# ─── UH6: INVENTARIO DE EQUIPOS ──────────────────────────────────────────────
+# ─── HU09: ITEMS DE INVENTARIO ───────────────────────────────────────────────
+
+class CategoriaItem(models.Model):
+    """HU09: Categoría de ítems de inventario"""
+    nombre = models.CharField(max_length=100, verbose_name='Categoría')
+    descripcion = models.TextField(blank=True, null=True, verbose_name='Descripción')
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        verbose_name = 'Categoría de Item'
+        verbose_name_plural = 'Categorías de Items'
+
+
+class Item(models.Model):
+    """HU09: Item de inventario (no equipos, sino ítems menores)"""
+    ESTADO_CHOICES = [
+        ('disponible', 'Disponible'),
+        ('prestado', 'Prestado'),
+        ('dañado', 'Dañado'),
+        ('dado_de_baja', 'Dado de Baja'),
+    ]
+
+    nombre = models.CharField(max_length=150, verbose_name='Nombre')
+    categoria = models.ForeignKey(
+        CategoriaItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Categoría'
+    )
+    descripcion = models.TextField(blank=True, null=True, verbose_name='Descripción')
+    cantidad = models.IntegerField(default=1, verbose_name='Cantidad')
+    cantidad_disponible = models.IntegerField(default=1, verbose_name='Cantidad Disponible')
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='disponible',
+        verbose_name='Estado'
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.nombre} (x{self.cantidad_disponible})'
+
+    class Meta:
+        verbose_name = 'Item'
+        verbose_name_plural = 'Items'
+        ordering = ['nombre']
+
+
+# ─── HU10: EQUIPOS ───────────────────────────────────────────────────────────
 
 class CategoriaEquipo(models.Model):
     nombre = models.CharField(max_length=100, verbose_name='Categoría')
@@ -163,6 +217,56 @@ class Equipo(models.Model):
         verbose_name = 'Equipo'
         verbose_name_plural = 'Equipos'
         ordering = ['nombre']
+
+
+# ─── HU11: TICKETS DE MANTENIMIENTO ──────────────────────────────────────────
+
+class Ticket(models.Model):
+    """HU11: Ticket para mantenimiento, actualizaciones y cambios de hardware/software"""
+    ESTADO_CHOICES = [
+        ('no_atendido', 'No Atendido'),
+        ('en_proceso', 'En Proceso'),
+        ('finalizado', 'Finalizado'),
+    ]
+
+    TIPO_CHOICES = [
+        ('mantenimiento', 'Mantenimiento'),
+        ('actualizacion', 'Actualización'),
+        ('software', 'Software'),
+        ('hardware', 'Hardware'),
+        ('otro', 'Otro'),
+    ]
+
+    equipo = models.ForeignKey(
+        Equipo,
+        on_delete=models.CASCADE,
+        related_name='tickets',
+        verbose_name='Equipo'
+    )
+    tipo = models.CharField(
+        max_length=20,
+        choices=TIPO_CHOICES,
+        default='mantenimiento',
+        verbose_name='Tipo de Ticket'
+    )
+    descripcion = models.TextField(verbose_name='Descripción del Trabajo')
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='no_atendido',
+        verbose_name='Estado'
+    )
+    notas = models.TextField(blank=True, null=True, verbose_name='Notas Técnicas')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Ticket #{self.pk} - {self.equipo.nombre} ({self.get_estado_display()})'
+
+    class Meta:
+        verbose_name = 'Ticket'
+        verbose_name_plural = 'Tickets'
+        ordering = ['-fecha_creacion']
 
 
 # ─── HU7: PRÉSTAMOS ──────────────────────────────────────────────────────────

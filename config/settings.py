@@ -79,8 +79,3 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'recovpass000@gmail.com'        # ← tu correo Gmail
 EMAIL_HOST_PASSWORD = 'arajkkxlafyseqrb'      # ← contraseña de aplicación (sin espacios)
 DEFAULT_FROM_EMAIL = 'recovpass000@gmail.com'     # ← mismo correo
-
-import os
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-

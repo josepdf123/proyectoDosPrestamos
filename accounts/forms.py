@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Usuario, Rol, Equipo
-from django.utils import timezone
+from .models import Usuario, Rol, Item, CategoriaItem, Equipo, CategoriaEquipo, Ticket
 
 
 class LoginForm(forms.Form):
@@ -58,41 +57,67 @@ class RestablecerContraseñaForm(forms.Form):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
+
         if password and password_confirm:
             if password != password_confirm:
                 raise forms.ValidationError('Las contraseñas no coinciden.')
+
         return cleaned_data
 
 
 class UsuarioCreationForm(UserCreationForm):
     """HU14: Formulario para crear usuario"""
     nombre = forms.CharField(
-        label='Nombre', max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del usuario'})
+        label='Nombre',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nombre del usuario',
+        })
     )
     apellido = forms.CharField(
-        label='Apellido', max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellido del usuario'})
+        label='Apellido',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Apellido del usuario',
+        })
     )
     usuario = forms.CharField(
-        label='Usuario', max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario único'})
+        label='Usuario',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nombre de usuario único',
+        })
     )
     correo = forms.EmailField(
         label='Correo Electrónico',
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'correo@institucion.edu'})
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'correo@institucion.edu',
+        })
     )
     idRol = forms.ModelChoiceField(
-        label='Rol', queryset=Rol.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'})
+        label='Rol',
+        queryset=Rol.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+        })
     )
     password1 = forms.CharField(
         label='Contraseña',
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña (mín. 8 caracteres)'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Contraseña (mín. 8 caracteres)',
+        })
     )
     password2 = forms.CharField(
         label='Confirmar Contraseña',
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirma la contraseña'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirma la contraseña',
+        })
     )
 
     class Meta:
@@ -115,24 +140,41 @@ class UsuarioCreationForm(UserCreationForm):
 class UsuarioEditForm(forms.ModelForm):
     """HU14: Formulario para editar usuario"""
     nombre = forms.CharField(
-        label='Nombre', max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del usuario'})
+        label='Nombre',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nombre del usuario',
+        })
     )
     apellido = forms.CharField(
-        label='Apellido', max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellido del usuario'})
+        label='Apellido',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Apellido del usuario',
+        })
     )
     correo = forms.EmailField(
         label='Correo Electrónico',
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'correo@institucion.edu'})
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'correo@institucion.edu',
+        })
     )
     idRol = forms.ModelChoiceField(
-        label='Rol', queryset=Rol.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'})
+        label='Rol',
+        queryset=Rol.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+        })
     )
     is_active = forms.BooleanField(
-        label='Usuario Activo', required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        label='Usuario Activo',
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+        })
     )
 
     class Meta:
@@ -146,44 +188,140 @@ class UsuarioEditForm(forms.ModelForm):
         return correo
 
 
-# ─── HU7: FORMULARIO DE PRÉSTAMO ─────────────────────────────────────────────
+# ─── HU09: FORMULARIOS PARA ITEMS ────────────────────────────────────────────
+
+class ItemForm(forms.ModelForm):
+    """HU09: Formulario para crear/editar ítems de inventario"""
+    class Meta:
+        model = Item
+        fields = ['nombre', 'categoria', 'descripcion', 'cantidad', 'estado']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del ítem',
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción del ítem',
+            }),
+            'cantidad': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+            }),
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+        }
+
+
+# ─── HU10: FORMULARIOS PARA EQUIPOS ──────────────────────────────────────────
+
+class EquipoForm(forms.ModelForm):
+    """HU10: Formulario para crear/editar equipos"""
+    class Meta:
+        model = Equipo
+        fields = ['nombre', 'categoria', 'descripcion', 'marca', 'modelo', 'numero_serie', 'estado', 'imagen']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del equipo',
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción del equipo',
+            }),
+            'marca': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Marca',
+            }),
+            'modelo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Modelo',
+            }),
+            'numero_serie': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Número de serie',
+            }),
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'imagen': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+            }),
+        }
+
+
+# ─── HU11: FORMULARIOS PARA TICKETS ──────────────────────────────────────────
+
+class TicketForm(forms.ModelForm):
+    """HU11: Formulario para crear tickets"""
+    class Meta:
+        model = Ticket
+        fields = ['equipo', 'tipo', 'descripcion']
+        widgets = {
+            'equipo': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'tipo': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Describe el trabajo a realizar',
+            }),
+        }
+
+
+class TicketEditForm(forms.ModelForm):
+    """HU11: Formulario para editar tickets (cambiar estado y notas)"""
+    class Meta:
+        model = Ticket
+        fields = ['estado', 'notas']
+        widgets = {
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'notas': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Notas técnicas del trabajo realizado',
+            }),
+        }
+
 
 class PrestamoForm(forms.Form):
-    """HU7 CA2: Formulario para solicitar un préstamo"""
+    """HU7: Formulario para solicitar préstamo"""
+    from .models import Prestamo
+    
     fecha_reclamo = forms.DateField(
         label='Fecha de Reclamo',
         widget=forms.DateInput(attrs={
             'class': 'form-control',
             'type': 'date',
-        }),
-        help_text='Fecha en que recogerás el equipo'
+        })
     )
     fecha_entrega = forms.DateField(
         label='Fecha de Entrega',
         widget=forms.DateInput(attrs={
             'class': 'form-control',
             'type': 'date',
-        }),
-        help_text='Fecha en que devolverás el equipo'
+        })
     )
     motivo = forms.CharField(
         label='Motivo del Préstamo',
         widget=forms.Textarea(attrs={
             'class': 'form-control',
-            'placeholder': 'Describe para qué necesitas el equipo...',
-            'rows': 3,
+            'rows': 4,
+            'placeholder': 'Explica por qué necesitas este equipo',
         })
     )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        fecha_reclamo = cleaned_data.get('fecha_reclamo')
-        fecha_entrega = cleaned_data.get('fecha_entrega')
-        hoy = timezone.now().date()
-
-        if fecha_reclamo and fecha_reclamo < hoy:
-            raise forms.ValidationError('❌ La fecha de reclamo no puede ser en el pasado.')
-        if fecha_reclamo and fecha_entrega:
-            if fecha_entrega <= fecha_reclamo:
-                raise forms.ValidationError('❌ La fecha de entrega debe ser posterior a la fecha de reclamo.')
-        return cleaned_data

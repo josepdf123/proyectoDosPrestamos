@@ -50,6 +50,14 @@
                             📊 Dashboard
                         </a>
                     </div>
+                    {% if request.user.idRol.descripcion == 'encargado_tecnologia' %}
+                    <div class="sidebar-item">
+                        <a href="{% url 'gestion_prestamos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'gestion_prestamos' %}active{% endif %}">
+                            📋 Gestión de Préstamos
+                        </a>
+                    </div>
+                    {% endif %}
+                    
                     <div class="sidebar-item">
                         <a href="{% url 'equipos_disponibles' %}" class="sidebar-link {% if request.resolver_match.url_name == 'equipos_disponibles' or request.resolver_match.url_name == 'equipo_detalle' %}active{% endif %}">
                             🖥️ Equipos Disponibles

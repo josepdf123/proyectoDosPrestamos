@@ -2,13 +2,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
 from django.contrib.auth import views as auth_views
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('login'), name='home'),
     path('', include('accounts.urls')),
+
+    # URLs de recuperación de contraseña (Django las maneja automáticamente)
     path('password-reset/',
         auth_views.PasswordResetView.as_view(
             template_name='accounts/password_reset.html',
@@ -37,4 +37,4 @@ urlpatterns = [
         ),
         name='password_reset_complete'
     ),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
