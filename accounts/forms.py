@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Usuario, Rol
+from .models import Usuario, Rol, Item, CategoriaItem, Equipo, CategoriaEquipo, Ticket
 
 
 class LoginForm(forms.Form):
@@ -186,3 +186,142 @@ class UsuarioEditForm(forms.ModelForm):
         if Usuario.objects.filter(correo=correo).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError('Este correo ya está registrado.')
         return correo
+
+
+# ─── HU09: FORMULARIOS PARA ITEMS ────────────────────────────────────────────
+
+class ItemForm(forms.ModelForm):
+    """HU09: Formulario para crear/editar ítems de inventario"""
+    class Meta:
+        model = Item
+        fields = ['nombre', 'categoria', 'descripcion', 'cantidad', 'estado']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del ítem',
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción del ítem',
+            }),
+            'cantidad': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+            }),
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+        }
+
+
+# ─── HU10: FORMULARIOS PARA EQUIPOS ──────────────────────────────────────────
+
+class EquipoForm(forms.ModelForm):
+    """HU10: Formulario para crear/editar equipos"""
+    class Meta:
+        model = Equipo
+        fields = ['nombre', 'categoria', 'descripcion', 'marca', 'modelo', 'numero_serie', 'estado', 'imagen']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del equipo',
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción del equipo',
+            }),
+            'marca': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Marca',
+            }),
+            'modelo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Modelo',
+            }),
+            'numero_serie': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Número de serie',
+            }),
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'imagen': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+            }),
+        }
+
+
+# ─── HU11: FORMULARIOS PARA TICKETS ──────────────────────────────────────────
+
+class TicketForm(forms.ModelForm):
+    """HU11: Formulario para crear tickets"""
+    class Meta:
+        model = Ticket
+        fields = ['equipo', 'tipo', 'descripcion']
+        widgets = {
+            'equipo': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'tipo': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Describe el trabajo a realizar',
+            }),
+        }
+
+
+class TicketEditForm(forms.ModelForm):
+    """HU11: Formulario para editar tickets (cambiar estado y notas)"""
+    class Meta:
+        model = Ticket
+        fields = ['estado', 'notas']
+        widgets = {
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'notas': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Notas técnicas del trabajo realizado',
+            }),
+        }
+
+
+class PrestamoForm(forms.Form):
+    """HU7: Formulario para solicitar préstamo"""
+    from .models import Prestamo
+    
+    fecha_reclamo = forms.DateField(
+        label='Fecha de Reclamo',
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',
+        })
+    )
+    fecha_entrega = forms.DateField(
+        label='Fecha de Entrega',
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',
+        })
+    )
+    motivo = forms.CharField(
+        label='Motivo del Préstamo',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 4,
+            'placeholder': 'Explica por qué necesitas este equipo',
+        })
+    )

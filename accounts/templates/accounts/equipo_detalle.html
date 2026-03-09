@@ -1,0 +1,86 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ equipo.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Botón volver -->
+    <a href="{% url 'equipos_disponibles' %}" class="btn btn-outline-secondary mb-4">
+        ← Volver a equipos disponibles
+    </a>
+
+    <div class="row">
+        <!-- Imagen -->
+        <div class="col-md-4 mb-4">
+            {% if equipo.imagen %}
+                <img src="{{ equipo.imagen.url }}" class="img-fluid rounded shadow"
+                     alt="{{ equipo.nombre }}">
+            {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow"
+                     style="height: 280px; font-size: 80px;">
+                    💻
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Detalle CA2 -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h3 class="fw-bold">{{ equipo.nombre }}</h3>
+                        <span class="badge bg-success fs-6 px-3 py-2">✅ Disponible</span>
+                    </div>
+
+                    {% if equipo.categoria %}
+                    <p class="mb-3">
+                        <span class="badge bg-light text-dark border fs-6">
+                            📂 {{ equipo.categoria.nombre }}
+                        </span>
+                    </p>
+                    {% endif %}
+
+                    <table class="table table-borderless">
+                        <tbody>
+                            {% if equipo.marca %}
+                            <tr>
+                                <td class="text-muted fw-semibold" style="width: 150px;">🏷️ Marca</td>
+                                <td>{{ equipo.marca }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.modelo %}
+                            <tr>
+                                <td class="text-muted fw-semibold">📋 Modelo</td>
+                                <td>{{ equipo.modelo }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.numero_serie %}
+                            <tr>
+                                <td class="text-muted fw-semibold">🔢 N° Serie</td>
+                                <td><code>{{ equipo.numero_serie }}</code></td>
+                            </tr>
+                            {% endif %}
+                            {% if equipo.descripcion %}
+                            <tr>
+                                <td class="text-muted fw-semibold">📝 Descripción</td>
+                                <td>{{ equipo.descripcion }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                    <!-- HU7: Botón solicitar préstamo -->
+                    <div class="mt-3 d-grid">
+                        <a href="{% url 'solicitar_prestamo' equipo.pk %}"
+                           class="btn btn-success btn-lg">
+                            📋 Solicitar Préstamo
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

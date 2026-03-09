@@ -1,0 +1,84 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Solicitar Préstamo{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <a href="{% url 'equipo_detalle' equipo.pk %}" class="btn btn-outline-secondary mb-4">
+        ← Volver al equipo
+    </a>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-1">📋 Solicitar Préstamo</h3>
+                    <p class="text-muted mb-4">Equipo: <strong>{{ equipo.nombre }}</strong></p>
+
+                    <!-- Info del equipo -->
+                    <div class="alert alert-info d-flex align-items-center mb-4">
+                        <span style="font-size: 30px;" class="me-3">🖥️</span>
+                        <div>
+                            <strong>{{ equipo.nombre }}</strong><br>
+                            <small>
+                                {% if equipo.marca %}{{ equipo.marca }}{% endif %}
+                                {% if equipo.modelo %} — {{ equipo.modelo }}{% endif %}
+                            </small><br>
+                            <span class="badge bg-success">✅ Disponible</span>
+                        </div>
+                    </div>
+
+                    <!-- CA2: Formulario -->
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">📅 Fecha de Reclamo</label>
+                            {{ form.fecha_reclamo }}
+                            {% if form.fecha_reclamo.help_text %}
+                                <small class="text-muted">{{ form.fecha_reclamo.help_text }}</small>
+                            {% endif %}
+                            {% if form.fecha_reclamo.errors %}
+                                <div class="text-danger small">{{ form.fecha_reclamo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">📅 Fecha de Entrega</label>
+                            {{ form.fecha_entrega }}
+                            {% if form.fecha_entrega.help_text %}
+                                <small class="text-muted">{{ form.fecha_entrega.help_text }}</small>
+                            {% endif %}
+                            {% if form.fecha_entrega.errors %}
+                                <div class="text-danger small">{{ form.fecha_entrega.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">📝 Motivo del Préstamo</label>
+                            {{ form.motivo }}
+                            {% if form.motivo.errors %}
+                                <div class="text-danger small">{{ form.motivo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <!-- CA3: Enviar solicitud -->
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                📤 Enviar Solicitud
+                            </button>
+                            <a href="{% url 'equipos_disponibles' %}" class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

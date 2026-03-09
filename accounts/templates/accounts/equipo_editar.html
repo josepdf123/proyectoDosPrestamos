@@ -1,0 +1,100 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Editar Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">✏️ Editar Equipo</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Editando: <strong>{{ equipo.nombre }}</strong></p>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label">{{ form.nombre.label }}</label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger small">{{ form.nombre.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.categoria.id_for_label }}" class="form-label">{{ form.categoria.label }}</label>
+                                {{ form.categoria }}
+                                {% if form.categoria.errors %}
+                                    <div class="text-danger small">{{ form.categoria.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.estado.id_for_label }}" class="form-label">{{ form.estado.label }}</label>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}
+                                    <div class="text-danger small">{{ form.estado.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.marca.id_for_label }}" class="form-label">{{ form.marca.label }}</label>
+                                {{ form.marca }}
+                                {% if form.marca.errors %}
+                                    <div class="text-danger small">{{ form.marca.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.modelo.id_for_label }}" class="form-label">{{ form.modelo.label }}</label>
+                                {{ form.modelo }}
+                                {% if form.modelo.errors %}
+                                    <div class="text-danger small">{{ form.modelo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.numero_serie.id_for_label }}" class="form-label">{{ form.numero_serie.label }}</label>
+                            {{ form.numero_serie }}
+                            {% if form.numero_serie.errors %}
+                                <div class="text-danger small">{{ form.numero_serie.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">{{ form.descripcion.label }}</label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="text-danger small">{{ form.descripcion.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.imagen.id_for_label }}" class="form-label">{{ form.imagen.label }}</label>
+                            {% if equipo.imagen %}
+                                <div class="mb-2">
+                                    <img src="{{ equipo.imagen.url }}" alt="{{ equipo.nombre }}" style="max-width: 200px;">
+                                </div>
+                            {% endif %}
+                            {{ form.imagen }}
+                            {% if form.imagen.errors %}
+                                <div class="text-danger small">{{ form.imagen.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">Guardar Cambios</button>
+                            <a href="{% url 'equipos_lista' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
