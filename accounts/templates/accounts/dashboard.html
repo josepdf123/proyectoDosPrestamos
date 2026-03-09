@@ -114,10 +114,7 @@
 
                         <div class="menu-title">Solicitudes</div>
                         <div class="sidebar-item">
-                            <a href="#" class="sidebar-link">✅ Aprobar Préstamos</a>
-                        </div>
-                        <div class="sidebar-item">
-                            <a href="#" class="sidebar-link">❌ Denegar Préstamos</a>
+                            <a href="{% url 'gestion_prestamos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'gestion_prestamos' %}active{% endif %}">📋 Gestión de Préstamos</a>
                         </div>
                     {% endif %}
 

@@ -31,5 +31,4 @@ urlpatterns = [
     path('gestion-prestamos/', views.gestion_prestamos_view, name='gestion_prestamos'),
     path('gestion-prestamos/<int:pk>/aprobar/', views.aprobar_prestamo_view, name='aprobar_prestamo'),
     path('gestion-prestamos/<int:pk>/denegar/', views.denegar_prestamo_view, name='denegar_prestamo'),
-    
-    ]
+]
