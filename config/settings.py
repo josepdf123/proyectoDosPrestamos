@@ -1,14 +1,13 @@
 from pathlib import Path
 import os
-from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-gestion-equipos-clave-secreta-2026-abc123xyz')
+SECRET_KEY = 'django-insecure-gestion-equipos-clave-secreta-2026-abc123xyz'
 
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = False  # Cambiar a False en producción
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = ['*']  # En producción, especificar: ['proyectodosprestamos.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -80,10 +79,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='recovpass000@gmail.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='arajkkxlafyseqrb')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='recovpass000@gmail.com')
+EMAIL_HOST_USER = 'recovpass000@gmail.com'
+EMAIL_HOST_PASSWORD = 'arajkkxlafyseqrb'
+DEFAULT_FROM_EMAIL = 'recovpass000@gmail.com'
 
-SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
-SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
-CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+# Seguridad (para HTTPS)
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
