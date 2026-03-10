@@ -1,0 +1,74 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Reportes de Préstamos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">📊 Reporte de Préstamos</h4>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="mes" class="form-label">Mes</label>
+                            <select name="mes" id="mes" class="form-control" required>
+                                <option value="">-- Selecciona Mes --</option>
+                                {% for valor, nombre in meses %}
+                                    <option value="{{ valor }}">{{ nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="año" class="form-label">Año</label>
+                            <select name="año" id="año" class="form-control" required>
+                                <option value="">-- Selecciona Año --</option>
+                                {% for anio in años %}
+                                    <option value="{{ anio }}">{{ anio }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <h5>📥 Descargar Reporte</h5>
+                    <form id="reportForm" method="GET" style="display: none;"></form>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-lg" onclick="descargarReporte('pdf')">
+                            📄 Descargar PDF
+                        </button>
+                        <button class="btn btn-info btn-lg" onclick="descargarReporte('excel')">
+                            📊 Descargar Excel
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg">
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function descargarReporte(formato) {
+    const mes = document.getElementById('mes').value;
+    const año = document.getElementById('año').value;
+    
+    if (!mes || !año) {
+        alert('Por favor selecciona mes y año');
+        return;
+    }
+    
+    if (formato === 'pdf') {
+        window.location.href = `{% url 'descargar_reporte_prestamos_pdf' %}?mes=${mes}&año=${año}`;
+    } else {
+        window.location.href = `{% url 'descargar_reporte_prestamos_excel' %}?mes=${mes}&año=${año}`;
+    }
+}
+</script>
+{% endblock %}

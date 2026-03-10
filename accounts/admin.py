@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Usuario, Rol, Item, CategoriaItem, Equipo, CategoriaEquipo, Ticket, Prestamo
+from .models import (Usuario, Rol, Item, CategoriaItem, Equipo, 
+                     CategoriaEquipo, Ticket, Prestamo, Notificacion)
 
 @admin.register(Rol)
 class RolAdmin(admin.ModelAdmin):
@@ -7,9 +8,9 @@ class RolAdmin(admin.ModelAdmin):
 
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'nombre', 'apellido', 'correo', 'idRol', 'is_active')
+    list_display = ('usuario', 'nombre', 'apellido', 'correo', 'idRol')
     list_filter = ('idRol', 'is_active')
-    search_fields = ('usuario', 'nombre', 'apellido', 'correo')
+    search_fields = ('usuario', 'nombre', 'correo')
 
 @admin.register(CategoriaItem)
 class CategoriaItemAdmin(admin.ModelAdmin):
@@ -17,28 +18,31 @@ class CategoriaItemAdmin(admin.ModelAdmin):
 
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'categoria', 'cantidad', 'cantidad_disponible', 'estado')
-    list_filter = ('categoria', 'estado')
-    search_fields = ('nombre',)
+    list_display = ('nombre', 'categoria', 'cantidad', 'estado')
+    list_filter = ('estado', 'categoria')
 
 @admin.register(CategoriaEquipo)
 class CategoriaEquipoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'descripcion')
+    list_display = ('nombre',)
 
 @admin.register(Equipo)
 class EquipoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'categoria', 'marca', 'modelo', 'estado')
-    list_filter = ('categoria', 'estado')
+    list_display = ('nombre', 'categoria', 'estado', 'numero_serie')
+    list_filter = ('estado', 'categoria')
     search_fields = ('nombre', 'numero_serie')
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'equipo', 'tipo', 'estado', 'fecha_creacion')
     list_filter = ('estado', 'tipo')
-    search_fields = ('equipo__nombre', 'descripcion')
 
 @admin.register(Prestamo)
 class PrestamoAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'equipo', 'fecha_reclamo', 'fecha_entrega', 'estado')
+    list_display = ('id', 'usuario', 'equipo', 'estado', 'fecha_reclamo')
     list_filter = ('estado', 'creado_en')
-    search_fields = ('usuario__nombre', 'equipo__nombre')
+
+@admin.register(Notificacion)
+class NotificacionAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'tipo', 'leida', 'creado_en')
+    list_filter = ('tipo', 'leida')
+    search_fields = ('mensaje', 'usuario__nombre')

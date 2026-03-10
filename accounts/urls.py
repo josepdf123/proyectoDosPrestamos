@@ -47,4 +47,35 @@ urlpatterns = [
     path('tickets/', views.tickets_lista_view, name='tickets_lista'),
     path('tickets/crear/', views.ticket_crear_view, name='ticket_crear'),
     path('tickets/editar/<int:pk>/', views.ticket_editar_view, name='ticket_editar'),
+    
+    # HU16 - Inventario General (Administrador)
+    path('inventario/', views.inventario_general_view, name='inventario_general'),
+    path('inventario/<int:pk>/', views.inventario_detalle_view, name='inventario_detalle'),
+    
+    # HU17 - Historial de Préstamos (Administrador)
+    path('historial-prestamos/', views.historial_prestamos_view, name='historial_prestamos'),
+    path('historial-prestamos/<int:pk>/', views.historial_prestamo_detalle_view, name='historial_prestamo_detalle'),
+    
+    # HU2 - Cambio de equipo
+    path('solicitar-cambio-equipo/<int:pk>/', views.solicitar_cambio_equipo_view, name='solicitar_cambio_equipo'),
+    
+    # HU3 - Notificaciones
+    path('notificaciones/', views.notificaciones_view, name='notificaciones'),
+    path('notificaciones/<int:pk>/leida/', views.marcar_notificacion_leida_view, name='marcar_notificacion_leida'),
+    
+    # HU5 - Historial mis préstamos
+    path('historial-mis-prestamos/', views.historial_mis_prestamos_view, name='historial_mis_prestamos'),
+    path('historial-mis-prestamos/<int:pk>/', views.historial_mis_prestamos_detalle_view, name='historial_mis_prestamos_detalle'),
+    # HU18 - Reportes de Préstamos
+    path('reportes-prestamos/', views.reportes_prestamos_view, name='reportes_prestamos'),
+    path('reportes-prestamos/descargar-pdf/', views.descargar_reporte_prestamos_pdf, name='descargar_reporte_prestamos_pdf'),
+    path('reportes-prestamos/descargar-excel/', views.descargar_reporte_prestamos_excel, name='descargar_reporte_prestamos_excel'),
+    
+    # HU19 - Reportes de Reparaciones
+    path('reportes-reparaciones/', views.reportes_reparaciones_view, name='reportes_reparaciones'),
+    path('reportes-reparaciones/descargar-pdf/', views.descargar_reporte_reparaciones_pdf, name='descargar_reporte_reparaciones_pdf'),
+    path('reportes-reparaciones/descargar-excel/', views.descargar_reporte_reparaciones_excel, name='descargar_reporte_reparaciones_excel'),
+    
+    # HU20 - Métricas y Estadísticas
+    path('metricas/', views.metricas_view, name='metricas'),
 ]

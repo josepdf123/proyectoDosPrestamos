@@ -1,0 +1,40 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Solicitar Cambio de Equipo{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 600px;">
+
+    <a href="{% url 'mis_prestamos' %}" class="btn btn-outline-secondary mb-4">
+        ← Volver a Mis Préstamos
+    </a>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-dark text-white fw-bold">
+            🔄 Solicitar Cambio de Equipo
+        </div>
+        <div class="card-body p-4">
+
+            <div class="alert alert-warning">
+                <strong>Equipo actual:</strong> {{ prestamo.equipo.nombre }}<br>
+                <strong>Fecha de entrega:</strong> {{ prestamo.fecha_entrega|date:"d/m/Y" }}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">📝 Motivo del cambio</label>
+                    <textarea name="motivo_cambio" class="form-control" rows="4"
+                              placeholder="Describe el fallo o problema con el equipo actual..."
+                              required></textarea>
+                    <div class="form-text">El administrador recibirá esta solicitud y te notificará cuando sea procesada.</div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        📤 Enviar Solicitud de Cambio
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

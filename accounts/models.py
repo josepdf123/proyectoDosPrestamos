@@ -313,3 +313,41 @@ class Prestamo(models.Model):
         verbose_name = 'Préstamo'
         verbose_name_plural = 'Préstamos'
         ordering = ['-creado_en']
+
+# ─── HU3: NOTIFICACIONES ─────────────────────────────────────────────────────
+
+class Notificacion(models.Model):
+    TIPO_CHOICES = [
+        ('prestamo_aprobado',  '✅ Préstamo Aprobado'),
+        ('prestamo_rechazado', '❌ Préstamo Rechazado'),
+        ('prestamo_vence_hoy', '⚠️ Vence Hoy'),
+        ('prestamo_atrasado',  '🔴 Préstamo Atrasado'),
+        ('cambio_aceptado',    '🔄 Cambio Aceptado'),
+        ('recordatorio',       '🔔 Recordatorio'),
+    ]
+
+    usuario    = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='notificaciones',
+        verbose_name='Usuario'
+    )
+    tipo       = models.CharField(max_length=30, choices=TIPO_CHOICES, verbose_name='Tipo')
+    mensaje    = models.TextField(verbose_name='Mensaje')
+    leida      = models.BooleanField(default=False, verbose_name='Leída')
+    prestamo   = models.ForeignKey(
+        'Prestamo',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='notificaciones',
+        verbose_name='Préstamo relacionado'
+    )
+    creado_en  = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'[{self.get_tipo_display()}] {self.usuario.usuario} - {self.mensaje[:40]}'
+
+    class Meta:
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
+        ordering = ['-creado_en']
