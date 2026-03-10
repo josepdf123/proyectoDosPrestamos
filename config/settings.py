@@ -1,12 +1,14 @@
 from pathlib import Path
+import os
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-gestion-equipos-clave-secreta-2026-abc123xyz'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-gestion-equipos-clave-secreta-2026-abc123xyz')
 
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=lambda v: [s.strip() for s in v.split(',')])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -20,6 +22,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -49,7 +52,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Base de datos SQLite3 (incluida con Django, sin instalación extra)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -57,7 +59,6 @@ DATABASES = {
     }
 }
 
-# Modelo de usuario personalizado
 AUTH_USER_MODEL = 'accounts.Usuario'
 
 AUTH_PASSWORD_VALIDATORS = []
@@ -67,7 +68,9 @@ TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
@@ -77,6 +80,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'recovpass000@gmail.com'        # ← tu correo Gmail
-EMAIL_HOST_PASSWORD = 'arajkkxlafyseqrb'      # ← contraseña de aplicación (sin espacios)
-DEFAULT_FROM_EMAIL = 'recovpass000@gmail.com'     # ← mismo correo
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='recovpass000@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='arajkkxlafyseqrb')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='recovpass000@gmail.com')
+
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
