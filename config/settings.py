@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-gestion-equipos-clave-secreta-2026-abc123xyz'
 
 DEBUG = False  # Cambiar a False en producción
 
-ALLOWED_HOSTS = ['*']  # En producción, especificar: ['proyectodosprestamos.onrender.com']
+ALLOWED_HOSTS = ['proyectodosprestamos.onrender.com', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
