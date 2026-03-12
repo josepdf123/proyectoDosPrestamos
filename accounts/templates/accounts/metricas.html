@@ -1,0 +1,201 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Métricas del Sistema{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1>📊 Métricas y Estadísticas del Sistema</h1>
+    <hr>
+    
+    <!-- USUARIOS -->
+    <h3 class="mt-5">👥 Usuarios</h3>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Usuarios</h5>
+                    <h2 class="text-primary">{{ total_usuarios }}</h2>
+                    <small class="text-muted">Activos: {{ usuarios_activos }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Administradores</h5>
+                    <h2 class="text-danger">{{ admins }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Encargados</h5>
+                    <h2 class="text-warning">{{ encargados }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Solicitantes</h5>
+                    <h2 class="text-success">{{ solicitantes }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- EQUIPOS -->
+    <h3 class="mt-5">🖥️ Equipos</h3>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Equipos</h5>
+                    <h2 class="text-primary">{{ total_equipos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">✓ Disponibles</h5>
+                    <h2 class="text-success">{{ equipos_disponibles }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">📋 Prestados</h5>
+                    <h2 class="text-info">{{ equipos_prestados }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🔧 Mantenimiento</h5>
+                    <h2 class="text-warning">{{ equipos_mantenimiento }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ITEMS -->
+    <h3 class="mt-5">📦 Items de Inventario</h3>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Items</h5>
+                    <h2 class="text-primary">{{ total_items }}</h2>
+                    <small class="text-muted">Disponibles: {{ items_disponibles }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PRÉSTAMOS -->
+    <h3 class="mt-5">📋 Préstamos</h3>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Préstamos</h5>
+                    <h2 class="text-primary">{{ total_prestamos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">⏳ Pendientes</h5>
+                    <h2 class="text-warning">{{ prestamos_pendientes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">✓ Aprobados</h5>
+                    <h2 class="text-success">{{ prestamos_aprobados }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🔴 Atrasados</h5>
+                    <h2 class="text-danger">{{ prestamos_atrasados }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TICKETS -->
+    <h3 class="mt-5">🎫 Tickets de Mantenimiento</h3>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Tickets</h5>
+                    <h2 class="text-primary">{{ total_tickets }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🔴 No Atendidos</h5>
+                    <h2 class="text-danger">{{ tickets_no_atendidos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🟡 En Proceso</h5>
+                    <h2 class="text-warning">{{ tickets_en_proceso }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🟢 Finalizados</h5>
+                    <h2 class="text-success">{{ tickets_finalizados }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NOTIFICACIONES -->
+    <h3 class="mt-5">🔔 Notificaciones</h3>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Sin Leer</h5>
+                    <h2 class="text-primary">{{ notificaciones_sin_leer }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BOTONES -->
+    <div class="row mt-5 mb-5">
+        <div class="col-md-12 text-center">
+            <a href="{% url 'reportes_prestamos' %}" class="btn btn-primary btn-lg me-2">
+                📊 Reportes Préstamos
+            </a>
+            <a href="{% url 'reportes_reparaciones' %}" class="btn btn-danger btn-lg me-2">
+                🔧 Reportes Reparaciones
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg">
+                ← Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

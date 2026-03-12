@@ -1,0 +1,214 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Dashboard - Gestión de Préstamos{% endblock %}
+
+{% block content %}
+
+    <!-- BIENVENIDA -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; border-radius: 10px; padding: 30px; margin-bottom: 30px;">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 style="margin: 0;">¡Bienvenido, {{ request.user.nombre }}!</h1>
+                <p style="margin: 10px 0 0 0; font-size: 18px;">
+                    {{ request.user.obtener_rol_display }}
+                </p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div style="font-size: 60px;">🛡️</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL USUARIO SOLICITANTE -->
+    {% if request.user.idRol.descripcion == 'usuario_solicitante' %}
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">📋</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Préstamos Activos</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">⏳</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Solicitudes Pendientes</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">🔔</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Notificaciones</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">📚</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Préstamos Totales</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>🚀 Acciones Rápidas</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <a href="{% url 'equipos_disponibles' %}" class="btn btn-primary w-100 mb-3" style="padding:15px; font-size:16px;">
+                    ➕ Solicitar Préstamo
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'equipos_disponibles' %}" class="btn btn-info w-100 mb-3" style="padding:15px; font-size:16px;">
+                    🖥️ Ver Equipos Disponibles
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'mis_prestamos' %}" class="btn btn-success w-100 mb-3" style="padding:15px; font-size:16px;">
+                    📋 Mis Préstamos Activos
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'mis_prestamos' %}" class="btn btn-warning w-100 mb-3" style="padding:15px; font-size:16px;">
+                    📚 Historial de Préstamos
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- PANEL ENCARGADO DE TECNOLOGÍA -->
+    {% if request.user.idRol.descripcion == 'encargado_tecnologia' %}
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">📦</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Equipos Disponibles</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">📋</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">En Préstamo</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">🔧</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">En Reparación</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">⏳</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Solicitudes Pendientes</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>🚀 Acciones Rápidas</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <a href="{% url 'equipo_crear' %}" class="btn btn-primary w-100 mb-3" style="padding:15px; font-size:16px;">
+                    ➕ Agregar Equipo
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'equipos_lista' %}" class="btn btn-info w-100 mb-3" style="padding:15px; font-size:16px;">
+                    📦 Ver Inventario
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'gestion_prestamos' %}" class="btn btn-success w-100 mb-3" style="padding:15px; font-size:16px;">
+                    ✅ Gestionar Préstamos
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'ticket_crear' %}" class="btn btn-warning w-100 mb-3" style="padding:15px; font-size:16px;">
+                    🎫 Crear Ticket
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- PANEL ADMINISTRADOR -->
+    {% if request.user.idRol.descripcion == 'administrador' %}
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">👥</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Usuarios Totales</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">📦</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Equipos en Sistema</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">📋</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Préstamos Activos</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center p-3">
+                    <div style="font-size:36px;">🔧</div>
+                    <div class="fw-bold fs-4">0</div>
+                    <div class="text-muted small">Incidencias</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>🚀 Acciones Rápidas</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <a href="{% url 'usuario_crear' %}" class="btn btn-primary w-100 mb-3" style="padding:15px; font-size:16px;">
+                    ➕ Crear Usuario
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'usuarios_lista' %}" class="btn btn-info w-100 mb-3" style="padding:15px; font-size:16px;">
+                    👥 Ver Todos los Usuarios
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'inventario_general' %}" class="btn btn-success w-100 mb-3" style="padding:15px; font-size:16px;">
+                    🖥️ Ver Inventario General
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'historial_prestamos' %}" class="btn btn-warning w-100 mb-3" style="padding:15px; font-size:16px;">
+                    📚 Historial Préstamos
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}
+ <div class="menu-title">Reportes y Métricas</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'metricas' %}" class="sidebar-link">
+                                📊 Métricas del Sistema
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'reportes_prestamos' %}" class="sidebar-link">
+                                📋 Reportes Préstamos
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'reportes_reparaciones' %}" class="sidebar-link">
+                                🔧 Reportes Reparaciones
+                            </a>
+                        </div>
+
+

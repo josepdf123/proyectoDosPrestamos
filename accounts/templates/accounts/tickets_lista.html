@@ -1,0 +1,127 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Gestión de Tickets{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>🎫 Gestión de Tickets de Mantenimiento</h1>
+            <p class="text-muted">Total de tickets: <strong>{{ total_tickets }}</strong></p>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'ticket_crear' %}" class="btn btn-success btn-lg">➕ Crear Ticket</a>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🔴 No Atendidos</h5>
+                    <h2 class="text-danger">{{ total_no_atendidos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🟡 En Proceso</h5>
+                    <h2 class="text-warning">{{ total_en_proceso }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🟢 Finalizados</h5>
+                    <h2 class="text-success">{{ total_finalizados }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" name="busqueda" class="form-control" placeholder="Buscar por equipo..." value="{{ busqueda }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="estado" class="form-control">
+                        <option value="">-- Todos los estados --</option>
+                        {% for valor, etiqueta in estados %}
+                            <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="tipo" class="form-control">
+                        <option value="">-- Todos los tipos --</option>
+                        {% for valor, etiqueta in tipos %}
+                            <option value="{{ valor }}" {% if tipo_filtro == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">🔍</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de tickets -->
+    {% if tickets %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Equipo</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                        <tr>
+                            <td><strong>#{{ ticket.pk }}</strong></td>
+                            <td>{{ ticket.equipo.nombre }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ ticket.get_tipo_display }}</span>
+                            </td>
+                            <td>{{ ticket.descripcion|truncatewords:10 }}</td>
+                            <td>
+                                {% if ticket.estado == 'no_atendido' %}
+                                    <span class="badge bg-danger">🔴 {{ ticket.get_estado_display }}</span>
+                                {% elif ticket.estado == 'en_proceso' %}
+                                    <span class="badge bg-warning">🟡 {{ ticket.get_estado_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">🟢 {{ ticket.get_estado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ticket.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'ticket_editar' ticket.pk %}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <p>No hay tickets registrados.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

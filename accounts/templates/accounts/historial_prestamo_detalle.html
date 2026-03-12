@@ -1,0 +1,140 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Detalle Préstamo #{{ prestamo.pk }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <a href="{% url 'historial_prestamos' %}" class="btn btn-outline-secondary mb-4">
+        ← Volver al Historial
+    </a>
+
+    <div class="row">
+        <!-- Datos del préstamo -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white fw-bold">
+                    📋 Préstamo #{{ prestamo.pk }}
+                </div>
+                <div class="card-body p-4">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted fw-semibold" style="width:160px;">📅 Fecha Reclamo</td>
+                                <td>{{ prestamo.fecha_reclamo|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">📅 Fecha Entrega</td>
+                                <td>{{ prestamo.fecha_entrega|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">📝 Motivo</td>
+                                <td>{{ prestamo.motivo }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">🔖 Estado</td>
+                                <td>
+                                    {% if prestamo.estado == 'pendiente' %}
+                                        <span class="badge bg-warning text-dark fs-6">⏳ Pendiente</span>
+                                    {% elif prestamo.estado == 'aprobado' %}
+                                        <span class="badge bg-success fs-6">✅ Aprobado</span>
+                                    {% elif prestamo.estado == 'rechazado' %}
+                                        <span class="badge bg-danger fs-6">❌ Rechazado</span>
+                                    {% elif prestamo.estado == 'entregado' %}
+                                        <span class="badge bg-info fs-6">📦 Entregado</span>
+                                    {% elif prestamo.estado == 'devuelto' %}
+                                        <span class="badge bg-secondary fs-6">🔄 Devuelto</span>
+                                    {% elif prestamo.estado == 'cancelado' %}
+                                        <span class="badge bg-dark fs-6">🚫 Cancelado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if prestamo.observaciones %}
+                            <tr>
+                                <td class="text-muted fw-semibold">💬 Observaciones</td>
+                                <td>{{ prestamo.observaciones }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="text-muted fw-semibold">🕐 Registrado</td>
+                                <td>{{ prestamo.creado_en|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">🔄 Actualizado</td>
+                                <td>{{ prestamo.actualizado_en|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos del usuario -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white fw-bold">
+                    👤 Usuario Solicitante
+                </div>
+                <div class="card-body p-4">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted fw-semibold" style="width:140px;">Nombre</td>
+                                <td>{{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellido }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">Correo</td>
+                                <td>{{ prestamo.usuario.correo }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">Usuario</td>
+                                <td><code>{{ prestamo.usuario.usuario }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">Rol</td>
+                                <td>{{ prestamo.usuario.obtener_rol_display }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Datos del equipo -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold">
+                    🖥️ Equipo Prestado
+                </div>
+                <div class="card-body p-4">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted fw-semibold" style="width:140px;">Nombre</td>
+                                <td>{{ prestamo.equipo.nombre }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">Marca</td>
+                                <td>{{ prestamo.equipo.marca|default:"—" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">Modelo</td>
+                                <td>{{ prestamo.equipo.modelo|default:"—" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">N° Serie</td>
+                                <td><code>{{ prestamo.equipo.numero_serie|default:"—" }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted fw-semibold">Estado actual</td>
+                                <td>{{ prestamo.equipo.get_estado_display }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <a href="{% url 'inventario_detalle' prestamo.equipo.pk %}"
+                       class="btn btn-outline-primary btn-sm mt-2">
+                        🔍 Ver equipo en inventario
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

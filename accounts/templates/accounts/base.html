@@ -1,0 +1,250 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestión de Préstamos{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f5f5f5; }
+        .navbar { background-color: #2c3e50; }
+        .sidebar { background-color: #34495e; min-height: 100vh; padding: 20px 0; }
+        .sidebar-item { padding: 0 15px; margin-bottom: 10px; }
+        .sidebar-link {
+            display: block; padding: 12px 15px; color: #ecf0f1;
+            text-decoration: none; border-radius: 5px; transition: all 0.3s; font-size: 14px;
+        }
+        .sidebar-link:hover { background-color: #2c3e50; color: #fff; padding-left: 20px; }
+        .sidebar-link.active { background-color: #e74c3c; color: #fff; }
+        .main-content { padding: 20px; }
+        .card { border: none; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .menu-title {
+            color: #ecf0f1; font-weight: bold; margin-top: 20px; margin-bottom: 10px;
+            padding: 0 15px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* HU3: Estilos campana notificaciones */
+        .notif-dropdown { min-width: 320px; max-height: 420px; overflow-y: auto; }
+        .notif-item-nueva { background-color: #f0f7ff; border-left: 3px solid #0d6efd; }
+        .notif-item:hover { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🔐 Gestión de Préstamos</span>
+            <div class="d-flex align-items-center gap-3">
+
+                <!-- HU3 CA2: Campana solo para usuario_solicitante -->
+                {% if request.user.idRol.descripcion == 'usuario_solicitante' %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-light position-relative"
+                            id="btnNotificaciones"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Notificaciones">
+                        🔔
+                        {% if notif_no_leidas > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                  style="font-size:10px;">
+                                {{ notif_no_leidas }}
+                            </span>
+                        {% endif %}
+                    </button>
+
+                    <!-- CA2: Dropdown lista de notificaciones -->
+                    <ul class="dropdown-menu dropdown-menu-end shadow notif-dropdown p-0">
+                        <!-- Encabezado -->
+                        <li class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center"
+                            style="background:#f8f9fa;">
+                            <strong>🔔 Notificaciones</strong>
+                            {% if notif_no_leidas > 0 %}
+                                <span class="badge bg-danger">{{ notif_no_leidas }} nueva(s)</span>
+                            {% endif %}
+                        </li>
+
+                        <!-- Últimas 5 notificaciones -->
+                        {% for notif in ultimas_notificaciones %}
+                        <li class="notif-item {% if not notif.leida %}notif-item-nueva{% endif %}">
+                            <a class="dropdown-item py-2 px-3"
+                               href="{% url 'notificaciones' %}"
+                               style="white-space:normal;">
+                                <div class="small fw-bold">{{ notif.get_tipo_display }}</div>
+                                <div class="small text-muted">{{ notif.mensaje|truncatechars:70 }}</div>
+                                <div class="small text-muted mt-1" style="font-size:11px;">
+                                    🕐 {{ notif.creado_en|timesince }}
+                                </div>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="px-3 py-4 text-center text-muted small">
+                            🔕 No tienes notificaciones nuevas
+                        </li>
+                        {% endfor %}
+
+                        <!-- Pie -->
+                        <li class="border-top">
+                            <a class="dropdown-item text-center text-primary py-2 small fw-semibold"
+                               href="{% url 'notificaciones' %}">
+                                Ver todas las notificaciones →
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <span class="text-white">
+                    {{ request.user.nombre }} ({{ request.user.obtener_rol_display }})
+                </span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- SIDEBAR -->
+            <div class="col-md-3 sidebar">
+                <div class="p-3">
+                    <h5 style="color: #ecf0f1; margin-bottom: 20px;">📌 Menú</h5>
+                    <hr style="border-color: #555;">
+
+                    <!-- MENÚ GENERAL -->
+                    <div class="menu-title">Principal</div>
+                    <div class="sidebar-item">
+                        <a href="{% url 'dashboard' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            📊 Dashboard
+                        </a>
+                    </div>
+                    <div class="sidebar-item">
+                        <a href="{% url 'equipos_disponibles' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'equipos_disponibles' or request.resolver_match.url_name == 'equipo_detalle' %}active{% endif %}">
+                            🖥️ Equipos Disponibles
+                        </a>
+                    </div>
+
+                    <!-- MENÚ USUARIO SOLICITANTE -->
+                    {% if request.user.idRol.descripcion == 'usuario_solicitante' %}
+                        <div class="menu-title">Mis Préstamos</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'mis_prestamos' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'mis_prestamos' or request.resolver_match.url_name == 'cancelar_prestamo' %}active{% endif %}">
+                                📋 Mis Préstamos
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'equipos_disponibles' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'solicitar_prestamo' %}active{% endif %}">
+                                ➕ Solicitar Préstamo
+                            </a>
+                        </div>
+
+                        <!-- ✅ HU5: Historial de préstamos -->
+                        <div class="sidebar-item">
+                            <a href="{% url 'historial_mis_prestamos' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'historial_mis_prestamos' or request.resolver_match.url_name == 'historial_mis_prestamos_detalle' %}active{% endif %}">
+                                📚 Historial de Préstamos
+                            </a>
+                        </div>
+
+                        <!-- HU3: Enlace notificaciones en sidebar -->
+                        <div class="menu-title">Notificaciones</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'notificaciones' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'notificaciones' %}active{% endif %}">
+                                🔔 Notificaciones
+                                {% if notif_no_leidas > 0 %}
+                                    <span class="badge bg-danger ms-1">{{ notif_no_leidas }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- MENÚ ENCARGADO DE TECNOLOGÍA -->
+                    {% if request.user.idRol.descripcion == 'encargado_tecnologia' %}
+                        <div class="menu-title">Gestión</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'equipos_lista' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'equipos_lista' or request.resolver_match.url_name == 'equipo_crear' or request.resolver_match.url_name == 'equipo_editar' or request.resolver_match.url_name == 'equipo_eliminar' %}active{% endif %}">
+                                ⚙️ Gestión de Equipos
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'items_lista' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'items_lista' or request.resolver_match.url_name == 'item_crear' or request.resolver_match.url_name == 'item_editar' or request.resolver_match.url_name == 'item_eliminar' %}active{% endif %}">
+                                🗃️ Gestión de Ítems
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'tickets_lista' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'tickets_lista' or request.resolver_match.url_name == 'ticket_crear' or request.resolver_match.url_name == 'ticket_editar' %}active{% endif %}">
+                                🎫 Tickets
+                            </a>
+                        </div>
+
+                        <div class="menu-title">Solicitudes</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'gestion_prestamos' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'gestion_prestamos' or request.resolver_match.url_name == 'aprobar_prestamo' or request.resolver_match.url_name == 'denegar_prestamo' %}active{% endif %}">
+                                ✅ Gestionar Préstamos
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- MENÚ ADMINISTRADOR -->
+                    {% if request.user.idRol.descripcion == 'administrador' %}
+                        <div class="menu-title">Administración</div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'usuarios_lista' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'usuarios_lista' or request.resolver_match.url_name == 'usuario_crear' or request.resolver_match.url_name == 'usuario_editar' or request.resolver_match.url_name == 'usuario_eliminar' %}active{% endif %}">
+                                👥 Gestionar Usuarios
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'inventario_general' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'inventario_general' or request.resolver_match.url_name == 'inventario_detalle' %}active{% endif %}">
+                                📦 Inventario General
+                            </a>
+                        </div>
+                        <div class="sidebar-item">
+                            <a href="{% url 'historial_prestamos' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'historial_prestamos' or request.resolver_match.url_name == 'historial_prestamo_detalle' %}active{% endif %}">
+                                📚 Historial Préstamos
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- SALIDA -->
+                    <div class="menu-title" style="margin-top: 30px;">Sesión</div>
+                    <div class="sidebar-item">
+                        <a href="{% url 'logout' %}" class="sidebar-link" style="color: #e74c3c;">
+                            🚪 Cerrar Sesión
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <div class="col-md-9 main-content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
