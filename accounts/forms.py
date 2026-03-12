@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Usuario, Rol, Item, CategoriaItem, Equipo, CategoriaEquipo, Ticket
+from .forms import RegistroFormSimple as RegistroForm
 
 
 class LoginForm(forms.Form):
