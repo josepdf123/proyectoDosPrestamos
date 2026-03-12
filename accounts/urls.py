@@ -2,8 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # HU13 - Login y Recuperación de Contraseña
+    # HU13 - Login y Recuperación de Contraseña}
     path('login/', views.login_view, name='login'),
+    path('registro/', views.registro_view, name='registro'),
     path('logout/', views.logout_view, name='logout'),
     path('recuperacion-contrasena/', views.recuperacion_contrasena_view, name='recuperacion_contrasena'),
     path('restablecer-contrasena/<str:token>/', views.restablecer_contrasena_view, name='restablecer_contrasena'),
@@ -78,6 +79,6 @@ urlpatterns = [
     
     # HU20 - Métricas y Estadísticas
     path('metricas/', views.metricas_view, name='metricas'),
-    
+
     path('registro/', views.registro_view, name='registro'),
 ]
