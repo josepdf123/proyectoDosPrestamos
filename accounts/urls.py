@@ -78,4 +78,6 @@ urlpatterns = [
     
     # HU20 - Métricas y Estadísticas
     path('metricas/', views.metricas_view, name='metricas'),
+    
+    path('registro/', views.registro_view, name='registro'),
 ]

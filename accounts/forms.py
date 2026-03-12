@@ -325,3 +325,77 @@ class PrestamoForm(forms.Form):
             'placeholder': 'Explica por qué necesitas este equipo',
         })
     )
+from django import forms
+from .models import Usuario, Rol
+
+class RegistroForm(forms.ModelForm):
+    """Formulario para registro de nuevos usuarios"""
+    password = forms.CharField(
+        label='Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingresa tu contraseña'
+        })
+    )
+    password_confirm = forms.CharField(
+        label='Confirmar Contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirma tu contraseña'
+        })
+    )
+    
+    class Meta:
+        model = Usuario
+        fields = ['nombre', 'apellido', 'usuario', 'correo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tu nombre'
+            }),
+            'apellido': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tu apellido'
+            }),
+            'usuario': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre de usuario (para login)'
+            }),
+            'correo': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'tu@email.com'
+            }),
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
+        
+        if password != password_confirm:
+            raise forms.ValidationError('Las contraseñas no coinciden')
+        
+        # Validar que usuario no exista
+        usuario = cleaned_data.get('usuario')
+        if Usuario.objects.filter(usuario=usuario).exists():
+            raise forms.ValidationError('Este usuario ya existe')
+        
+        # Validar que correo no exista
+        correo = cleaned_data.get('correo')
+        if Usuario.objects.filter(correo=correo).exists():
+            raise forms.ValidationError('Este correo ya está registrado')
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        
+        # Asignar rol por defecto: usuario_solicitante
+        rol = Rol.objects.get(descripcion='usuario_solicitante')
+        user.idRol = rol
+        user.is_active = True
+        
+        if commit:
+            user.save()
+        return user

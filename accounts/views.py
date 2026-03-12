@@ -1,5 +1,5 @@
 from .models import Usuario, Rol, Equipo, CategoriaEquipo, Item, CategoriaItem, Ticket, Prestamo, Notificacion
-from .forms import LoginForm, RecuperacionContraseñaForm, RestablecerContraseñaForm, UsuarioCreationForm, UsuarioEditForm, ItemForm, EquipoForm, TicketForm, TicketEditForm, PrestamoForm
+from .forms import LoginForm, RecuperacionContraseñaForm, RestablecerContraseñaForm, UsuarioCreationForm, UsuarioEditForm, ItemForm, EquipoForm, TicketForm, TicketEditForm, PrestamoForm, RegistroForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -11,9 +11,16 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from datetime import timedelta, date
 import uuid
-
-#from .models import Usuario, Rol, Equipo, CategoriaEquipo, Item, CategoriaItem, Ticket, Prestamo, Notificacion
-
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from datetime import datetime
+from django.http import HttpResponse, JsonResponse
+import calendar
 
 
 MAX_INTENTOS = 3
@@ -181,6 +188,31 @@ def restablecer_contrasena_view(request, token):
             error = 'Por favor, revisa los datos ingresados.'
 
     return render(request, 'accounts/restablecer_contrasena.html', {'form': form, 'error': error, 'token': token})
+
+
+# ─── REGISTRO DE USUARIOS ─────────────────────────────────────────────────────
+
+
+def registro_view(request):
+    """HU: Registro de nuevos usuarios - Sign Up"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f'¡Bienvenido {user.nombre}! Tu cuenta ha sido creada. Ahora puedes iniciar sesión.')
+            return redirect('login')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    else:
+        form = RegistroForm()
+    
+    context = {'form': form}
+    return render(request, 'accounts/registro.html', context)
 
 
 def dashboard_view(request):
@@ -928,7 +960,6 @@ def generar_notificaciones_prestamos(usuario):
     Genera automáticamente notificaciones para préstamos atrasados
     o que vencen hoy. Evita duplicados del mismo día.
     """
-    from datetime import date
     hoy = date.today()
 
     prestamos_activos = Prestamo.objects.filter(
@@ -952,9 +983,8 @@ def generar_notificaciones_prestamos(usuario):
                 f'vence HOY. Recuerda devolverlo.'
             )
         else:
-            continue  # sin notificación si aún tiene tiempo
+            continue
 
-        # Evitar duplicar notificaciones del mismo tipo y préstamo en el mismo día
         ya_existe = Notificacion.objects.filter(
             usuario=usuario,
             tipo=tipo,
@@ -974,14 +1004,12 @@ def generar_notificaciones_prestamos(usuario):
 @login_required(login_url='/login/')
 def notificaciones_view(request):
     """HU3 CA1 y CA2: Ver todas las notificaciones del usuario"""
-    # Generar notificaciones automáticas antes de mostrar
     generar_notificaciones_prestamos(request.user)
 
     notificaciones = Notificacion.objects.filter(
         usuario=request.user
     ).order_by('-creado_en')[:30]
 
-    # Marcar todas como leídas al abrir la página
     Notificacion.objects.filter(
         usuario=request.user,
         leida=False
@@ -1009,7 +1037,6 @@ def historial_mis_prestamos_view(request):
     """HU5 CA1: Ver historial completo de préstamos del usuario solicitante"""
     prestamos = Prestamo.objects.filter(usuario=request.user).order_by('-creado_en')
 
-    # Filtro por estado
     estado_filtro = request.GET.get('estado', '')
     if estado_filtro:
         prestamos = prestamos.filter(estado=estado_filtro)
@@ -1032,18 +1059,9 @@ def historial_mis_prestamos_detalle_view(request, pk):
     """HU5 CA2: Ver detalle de un préstamo específico del usuario"""
     prestamo = get_object_or_404(Prestamo, pk=pk, usuario=request.user)
     return render(request, 'accounts/historial_mis_prestamos_detalle.html', {'prestamo': prestamo})
-# ─── HU18: GENERAR REPORTES DE PRÉSTAMOS MENSUALES ──────────────────────────
 
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
-from datetime import datetime
-from django.http import HttpResponse
-import calendar
+
+# ─── HU18: GENERAR REPORTES DE PRÉSTAMOS MENSUALES ──────────────────────────
 
 @solo_administrador
 def reportes_prestamos_view(request):
@@ -1064,20 +1082,17 @@ def descargar_reporte_prestamos_pdf(request):
     mes = int(request.GET.get('mes', 1))
     año = int(request.GET.get('año', datetime.now().year))
     
-    # Obtener préstamos del mes
     prestamos = Prestamo.objects.filter(
         creado_en__month=mes,
         creado_en__year=año
     ).order_by('creado_en')
     
-    # Crear PDF
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="reporte_prestamos_{año}_{mes}.pdf"'
     
     doc = SimpleDocTemplate(response, pagesize=letter)
     elements = []
     
-    # Estilos
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
         'CustomTitle',
@@ -1087,7 +1102,6 @@ def descargar_reporte_prestamos_pdf(request):
         spaceAfter=30,
     )
     
-    # Título
     titulo = Paragraph(
         f'📊 Reporte de Préstamos - {calendar.month_name[mes]} {año}',
         title_style
@@ -1095,7 +1109,6 @@ def descargar_reporte_prestamos_pdf(request):
     elements.append(titulo)
     elements.append(Spacer(1, 0.3 * inch))
     
-    # Tabla
     data = [['ID', 'Usuario', 'Equipo', 'F. Reclamo', 'F. Entrega', 'Estado']]
     for prestamo in prestamos:
         data.append([
@@ -1124,7 +1137,6 @@ def descargar_reporte_prestamos_pdf(request):
     elements.append(table)
     elements.append(Spacer(1, 0.3 * inch))
     
-    # Resumen
     total = prestamos.count()
     aprobados = prestamos.filter(estado='aprobado').count()
     pendientes = prestamos.filter(estado='pendiente').count()
@@ -1151,16 +1163,13 @@ def descargar_reporte_prestamos_excel(request):
         creado_en__year=año
     ).order_by('creado_en')
     
-    # Crear Excel
     wb = Workbook()
     ws = wb.active
     ws.title = f'Préstamos {mes}-{año}'
     
-    # Header
     headers = ['ID', 'Usuario', 'Equipo', 'Fecha Reclamo', 'Fecha Entrega', 'Estado', 'Motivo']
     ws.append(headers)
     
-    # Estilos
     header_fill = PatternFill(start_color='34495e', end_color='34495e', fill_type='solid')
     header_font = Font(color='FFFFFF', bold=True)
     
@@ -1168,7 +1177,6 @@ def descargar_reporte_prestamos_excel(request):
         cell.fill = header_fill
         cell.font = header_font
     
-    # Datos
     for prestamo in prestamos:
         ws.append([
             prestamo.id,
@@ -1180,7 +1188,6 @@ def descargar_reporte_prestamos_excel(request):
             prestamo.motivo[:50],
         ])
     
-    # Ajustar ancho de columnas
     ws.column_dimensions['A'].width = 8
     ws.column_dimensions['B'].width = 15
     ws.column_dimensions['C'].width = 15
@@ -1189,7 +1196,6 @@ def descargar_reporte_prestamos_excel(request):
     ws.column_dimensions['F'].width = 12
     ws.column_dimensions['G'].width = 30
     
-    # Respuesta
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
@@ -1247,7 +1253,6 @@ def descargar_reporte_reparaciones_pdf(request):
     elements.append(titulo)
     elements.append(Spacer(1, 0.3 * inch))
     
-    # Tabla
     data = [['ID', 'Equipo', 'Tipo', 'Estado', 'Fecha Creación', 'Descripción']]
     for ticket in tickets:
         data.append([
@@ -1276,7 +1281,6 @@ def descargar_reporte_reparaciones_pdf(request):
     elements.append(table)
     elements.append(Spacer(1, 0.3 * inch))
     
-    # Resumen
     total = tickets.count()
     no_atendidos = tickets.filter(estado='no_atendido').count()
     en_proceso = tickets.filter(estado='en_proceso').count()
@@ -1351,24 +1355,20 @@ def descargar_reporte_reparaciones_excel(request):
 def metricas_view(request):
     """HU20: Panel de métricas y estadísticas del sistema"""
     
-    # Estadísticas de Usuarios
     total_usuarios = Usuario.objects.count()
     usuarios_activos = Usuario.objects.filter(is_active=True).count()
     admins = Usuario.objects.filter(idRol__descripcion='administrador').count()
     encargados = Usuario.objects.filter(idRol__descripcion='encargado_tecnologia').count()
     solicitantes = Usuario.objects.filter(idRol__descripcion='usuario_solicitante').count()
     
-    # Estadísticas de Equipos
     total_equipos = Equipo.objects.count()
     equipos_disponibles = Equipo.objects.filter(estado='disponible').count()
     equipos_prestados = Equipo.objects.filter(estado='prestado').count()
     equipos_mantenimiento = Equipo.objects.filter(estado='mantenimiento').count()
     
-    # Estadísticas de Items
     total_items = Item.objects.count()
     items_disponibles = Item.objects.filter(estado='disponible').count()
     
-    # Estadísticas de Préstamos
     total_prestamos = Prestamo.objects.count()
     prestamos_pendientes = Prestamo.objects.filter(estado='pendiente').count()
     prestamos_aprobados = Prestamo.objects.filter(estado='aprobado').count()
@@ -1378,76 +1378,35 @@ def metricas_view(request):
         fecha_entrega__lt=date.today()
     ).count()
     
-    # Estadísticas de Tickets
     total_tickets = Ticket.objects.count()
     tickets_no_atendidos = Ticket.objects.filter(estado='no_atendido').count()
     tickets_en_proceso = Ticket.objects.filter(estado='en_proceso').count()
     tickets_finalizados = Ticket.objects.filter(estado='finalizado').count()
     
-    # Notificaciones sin leer
     notificaciones_sin_leer = Notificacion.objects.filter(leida=False).count()
     
     context = {
-        # Usuarios
         'total_usuarios': total_usuarios,
         'usuarios_activos': usuarios_activos,
         'admins': admins,
         'encargados': encargados,
         'solicitantes': solicitantes,
-        
-        # Equipos
         'total_equipos': total_equipos,
         'equipos_disponibles': equipos_disponibles,
         'equipos_prestados': equipos_prestados,
         'equipos_mantenimiento': equipos_mantenimiento,
-        
-        # Items
         'total_items': total_items,
         'items_disponibles': items_disponibles,
-        
-        # Préstamos
         'total_prestamos': total_prestamos,
         'prestamos_pendientes': prestamos_pendientes,
         'prestamos_aprobados': prestamos_aprobados,
         'prestamos_devueltos': prestamos_devueltos,
         'prestamos_atrasados': prestamos_atrasados,
-        
-        # Tickets
         'total_tickets': total_tickets,
         'tickets_no_atendidos': tickets_no_atendidos,
         'tickets_en_proceso': tickets_en_proceso,
         'tickets_finalizados': tickets_finalizados,
-        
-        # Notificaciones
         'notificaciones_sin_leer': notificaciones_sin_leer,
     }
     
     return render(request, 'accounts/metricas.html', context)
-@login_required
-def crear_usuarios_iniciales(request):
-    """Vista para crear usuarios iniciales (solo primera vez)"""
-    from django.http import JsonResponse
-    
-    if request.user.idRol.descripcion != 'administrador':
-        return JsonResponse({'error': 'No tienes permiso'}, status=403)
-    
-    usuarios_a_crear = [
-        {'usuario': 'john', 'password': '123456', 'correo': 'john@gmail.com', 'nombre': 'John', 'apellido': 'Doe'},
-        {'usuario': 'maria', 'password': '123456', 'correo': 'maria@gmail.com', 'nombre': 'Maria', 'apellido': 'Garcia'},
-    ]
-    
-    creados = []
-    for user_data in usuarios_a_crear:
-        if not Usuario.objects.filter(usuario=user_data['usuario']).exists():
-            Usuario.objects.create_user(
-                usuario=user_data['usuario'],
-                password=user_data['password'],
-                correo=user_data['correo'],
-                nombre=user_data['nombre'],
-                apellido=user_data['apellido'],
-                idRol=Rol.objects.get(descripcion='usuario_solicitante'),
-                is_active=True
-            )
-            creados.append(user_data['usuario'])
-    
-    return JsonResponse({'creados': creados, 'mensaje': f'{len(creados)} usuarios creados'})
