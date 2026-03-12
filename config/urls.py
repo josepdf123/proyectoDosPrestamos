@@ -5,6 +5,11 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('accounts.urls')),
+    path('crear-usuarios-iniciales/', views.crear_usuarios_iniciales, name='crear_usuarios_iniciales'),
+]
+urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', lambda request: redirect('login'), name='home'),
     path('', include('accounts.urls')),
     path('crear-usuarios-iniciales/', views.crear_usuarios_iniciales, name='crear_usuarios_iniciales'),
