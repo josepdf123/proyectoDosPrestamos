@@ -6,13 +6,14 @@ django.setup()
 
 from accounts.models import Usuario, Rol
 
+print("🔄 Creando usuarios...")
+
 # Crear rol si no existe
 rol, _ = Rol.objects.get_or_create(descripcion='usuario_solicitante')
 
 # Crear usuarios
 usuarios_a_crear = [
     {'usuario': 'john', 'password': '123456', 'correo': 'john@gmail.com', 'nombre': 'John', 'apellido': 'Doe'},
-    {'usuario': 'maria', 'password': '123456', 'correo': 'maria@gmail.com', 'nombre': 'Maria', 'apellido': 'Garcia'},
 ]
 
 for user_data in usuarios_a_crear:
@@ -29,3 +30,5 @@ for user_data in usuarios_a_crear:
         print(f"✅ Usuario creado: {user_data['usuario']}")
     else:
         print(f"⚠️ Usuario ya existe: {user_data['usuario']}")
+
+print("✅ Script finalizado")
