@@ -21,6 +21,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from datetime import datetime
 from django.http import HttpResponse, JsonResponse
 import calendar
+from .forms import RegistroForm
 
 
 MAX_INTENTOS = 3
