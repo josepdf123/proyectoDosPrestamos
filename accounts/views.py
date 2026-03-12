@@ -1423,3 +1423,31 @@ def metricas_view(request):
     }
     
     return render(request, 'accounts/metricas.html', context)
+@login_required
+def crear_usuarios_iniciales(request):
+    """Vista para crear usuarios iniciales (solo primera vez)"""
+    from django.http import JsonResponse
+    
+    if request.user.idRol.descripcion != 'administrador':
+        return JsonResponse({'error': 'No tienes permiso'}, status=403)
+    
+    usuarios_a_crear = [
+        {'usuario': 'john', 'password': '123456', 'correo': 'john@gmail.com', 'nombre': 'John', 'apellido': 'Doe'},
+        {'usuario': 'maria', 'password': '123456', 'correo': 'maria@gmail.com', 'nombre': 'Maria', 'apellido': 'Garcia'},
+    ]
+    
+    creados = []
+    for user_data in usuarios_a_crear:
+        if not Usuario.objects.filter(usuario=user_data['usuario']).exists():
+            Usuario.objects.create_user(
+                usuario=user_data['usuario'],
+                password=user_data['password'],
+                correo=user_data['correo'],
+                nombre=user_data['nombre'],
+                apellido=user_data['apellido'],
+                idRol=Rol.objects.get(descripcion='usuario_solicitante'),
+                is_active=True
+            )
+            creados.append(user_data['usuario'])
+    
+    return JsonResponse({'creados': creados, 'mensaje': f'{len(creados)} usuarios creados'})

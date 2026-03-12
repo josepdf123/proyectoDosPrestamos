@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('login'), name='home'),
     path('', include('accounts.urls')),
-
+    path('crear-usuarios-iniciales/', views.crear_usuarios_iniciales, name='crear_usuarios_iniciales'),
     # URLs de recuperación de contraseña (Django las maneja automáticamente)
     path('password-reset/',
         auth_views.PasswordResetView.as_view(
@@ -37,4 +37,5 @@ urlpatterns = [
         ),
         name='password_reset_complete'
     ),
+    
 ]
